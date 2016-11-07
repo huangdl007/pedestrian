@@ -1,3 +1,20 @@
+# Caffe
+caffe
+
+# Data
+data
+
+# Logs
+experiments/logs
+
+# Output
+output
+
+# Mass
+LICENSE
+nohup.out
+README.md
+
 # Compiled Object files
 *.slo
 *.lo
