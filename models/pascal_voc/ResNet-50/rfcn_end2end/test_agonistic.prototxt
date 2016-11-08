@@ -3752,7 +3752,7 @@ layer {
 
 #-----------------------output------------------------
 layer {
-   name: "cls_prob"
+   name: "cls_probility"
    type: "Softmax"
    bottom: "cls_score"
    top: "cls_prob_pre"
