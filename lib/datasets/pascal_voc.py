@@ -255,7 +255,7 @@ class pascal_voc(imdb):
                 continue
             print 'Writing {} VOC results file'.format(cls)
             filename = self._get_voc_results_file_template().format(cls)
-            with open(filename, 'wt') as f:
+            with open(filename, 'w') as f:
                 for im_ind, index in enumerate(self.image_index):
                     dets = all_boxes[cls_ind][im_ind]
                     if dets == []:
@@ -292,9 +292,12 @@ class pascal_voc(imdb):
                 continue
             filename = self._get_voc_results_file_template().format(cls)
             rec, prec, ap = voc_eval(
-                filename, annopath, imagesetfile, cls, cachedir, ovthresh=0.5,
+                filename, annopath, imagesetfile, cls, cachedir, ovthresh=0.6,
                 use_07_metric=use_07_metric)
             aps += [ap]
+            #print len(rec), rec, len(prec), prec, ap
+            print('Recall for {} = {:.4f}'.format(cls, rec[-1]))
+            print('Precision for {} = {:.4f}'.format(cls, prec[-1]))
             print('AP for {} = {:.4f}'.format(cls, ap))
             with open(os.path.join(output_dir, cls + '_pr.pkl'), 'w') as f:
                 cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)

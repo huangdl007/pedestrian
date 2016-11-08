@@ -150,7 +150,7 @@ def voc_eval(detpath,
 
     # go down dets and mark TPs and FPs
     nd = len(image_ids)
-    print nd
+    #print nd
     tp = np.zeros(nd)
     fp = np.zeros(nd)
     for d in range(nd):
