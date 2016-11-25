@@ -10,13 +10,16 @@
 """Test a Fast R-CNN network on an image database."""
 
 import _init_paths
+
 from fast_rcnn.test import test_net
+from mylib.test import test_rpn
 from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list
 from datasets.factory import get_imdb
 import caffe
 import argparse
 import pprint
 import time, os, sys
+
 
 def parse_args():
     """
@@ -89,4 +92,5 @@ if __name__ == '__main__':
     if not cfg.TEST.HAS_RPN:
         imdb.set_proposal_method(cfg.TEST.PROPOSAL_METHOD)
 
-    test_net(net, imdb, max_per_image=args.max_per_image, vis=args.vis, wrt=args.wrt)
+    #test_net(net, imdb, max_per_image=args.max_per_image, vis=args.vis, wrt=args.wrt)
+    test_rpn(net, imdb, max_per_image=args.max_per_image, vis=args.vis, wrt=args.wrt)

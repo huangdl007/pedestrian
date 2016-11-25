@@ -59,8 +59,8 @@ def do_python_eval(resultType='old', thres=0.5):
     cachedir = os.path.join(devkit_path, 'annotations_cache')
     aps = []
     # The PASCAL VOC metric changed in 2010
-    use_07_metric = False
-    #use_07_metric = True if int(self._year) < 2010 else False
+    #use_07_metric = False
+    use_07_metric = True if int(year) < 2010 else False
 
     cls = 'pedestrian'
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 	new_recalls, new_aps = get_recall(threshs, 'new')
 
 	plt.figure()
-	plt.plot(threshs, old_recalls, label="old result",color="red",linewidth=2)
-	plt.plot(threshs, new_recalls, label="new result",color="blue",linewidth=2)
+	plt.plot(threshs, old_aps, label="old result",color="red",linewidth=2)
+	plt.plot(threshs, new_aps, label="new result",color="blue",linewidth=2)
 	plt.xlim(0.5,1.0)
 	plt.savefig('recall curve.jpg')

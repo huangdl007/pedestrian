@@ -1,12 +1,3 @@
-# --------------------------------------------------------
-# Fast R-CNN
-# Copyright (c) 2015 Microsoft
-# Licensed under The MIT License [see LICENSE for details]
-# Written by Ross Girshick
-# --------------------------------------------------------
-
-"""Test a Fast R-CNN network on an imdb (image database)."""
-
 from fast_rcnn.config import cfg, get_output_dir
 from fast_rcnn.bbox_transform import clip_boxes, bbox_transform_inv
 import argparse
@@ -156,76 +147,14 @@ def im_detect(net, im, boxes=None):
     if cfg.TEST.HAS_RPN:
         assert len(im_scales) == 1, "Only single-image batch implemented"
         rois = net.blobs['rois'].data.copy()
+        print rois.shape
+        exit(1)
         # unscale back to raw image space
         boxes = rois[:, 1:5] / im_scales[0]
 
+    return boxes[:50]
 
-    if cfg.TEST.SVM:
-        # use the raw scores before softmax under the assumption they
-        # were trained as linear SVMs
-        scores = net.blobs['cls_score'].data
-    else:
-        # use softmax estimated probabilities
-        scores = blobs_out['cls_prob']
-
-    if cfg.TEST.BBOX_REG:
-        # Apply bounding-box regression deltas
-        box_deltas = blobs_out['bbox_pred']
-        pred_boxes = bbox_transform_inv(boxes, box_deltas)
-        pred_boxes = clip_boxes(pred_boxes, im.shape)
-    else:
-        # Simply repeat the boxes, once for each class
-        pred_boxes = np.tile(boxes, (1, scores.shape[1]))
-
-    if cfg.DEDUP_BOXES > 0 and not cfg.TEST.HAS_RPN:
-        # Map scores and predictions back to the original set of boxes
-        scores = scores[inv_index, :]
-        pred_boxes = pred_boxes[inv_index, :]
-
-    return scores, pred_boxes
-
-def vis_detections(im, class_name, dets, thresh=0.3):
-    """Visual debugging of detections."""
-    import matplotlib.pyplot as plt
-    im = im[:, :, (2, 1, 0)]
-    for i in xrange(np.minimum(10, dets.shape[0])):
-        bbox = dets[i, :4]
-        score = dets[i, -1]
-        if score > thresh:
-            plt.cla()
-            plt.imshow(im)
-            plt.gca().add_patch(
-                plt.Rectangle((bbox[0], bbox[1]),
-                              bbox[2] - bbox[0],
-                              bbox[3] - bbox[1], fill=False,
-                              edgecolor='g', linewidth=3)
-                )
-            plt.title('{}  {:.3f}'.format(class_name, score))
-            plt.show()
-
-def apply_nms(all_boxes, thresh):
-    """Apply non-maximum suppression to all predicted boxes output by the
-    test_net method.
-    """
-    num_classes = len(all_boxes)
-    num_images = len(all_boxes[0])
-    nms_boxes = [[[] for _ in xrange(num_images)]
-                 for _ in xrange(num_classes)]
-    for cls_ind in xrange(num_classes):
-        for im_ind in xrange(num_images):
-            dets = all_boxes[cls_ind][im_ind]
-            if dets == []:
-                continue
-            # CPU NMS is much faster than GPU NMS when the number of boxes
-            # is relative small (e.g., < 10k)
-            # TODO(rbg): autotune NMS dispatch
-            keep = nms(dets, thresh, force_cpu=True)
-            if len(keep) == 0:
-                continue
-            nms_boxes[cls_ind][im_ind] = dets[keep, :].copy()
-    return nms_boxes
-
-def test_net(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
+def test_rpn(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
     """Test a Fast R-CNN network on an image database."""
     num_images = len(imdb.image_index)
     # all detections are collected into:
@@ -262,58 +191,22 @@ def test_net(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
 
         im = cv2.imread(imdb.image_path_at(i))
         _t['im_detect'].tic()
-        scores, boxes = im_detect(net, im, box_proposals)
-        _t['im_detect'].toc()
-
-        _t['misc'].tic()
-        # skip j = 0, because it's the background class
-        for j in xrange(1, imdb.num_classes):
-            inds = np.where(scores[:, j] > thresh)[0]
-            cls_scores = scores[inds, j]
-            if cfg.TEST.AGONISTIC:
-                cls_boxes = boxes[inds, 4:8]
-            else:
-                cls_boxes = boxes[inds, j*4:(j+1)*4]
-            cls_dets = np.hstack((cls_boxes, cls_scores[:, np.newaxis])) \
-                .astype(np.float32, copy=False)
-            keep = nms(cls_dets, cfg.TEST.NMS)
-            cls_dets = cls_dets[keep, :]
-            if vis:
-                vis_detections(im, imdb.classes[j], cls_dets)
-            all_boxes[j][i] = cls_dets
-
-        # Limit to max_per_image detections *over all classes*
-        if max_per_image > 0:
-            image_scores = np.hstack([all_boxes[j][i][:, -1]
-                                      for j in xrange(1, imdb.num_classes)])
-            if len(image_scores) > max_per_image:
-                image_thresh = np.sort(image_scores)[-max_per_image]
-                for j in xrange(1, imdb.num_classes):
-                    keep = np.where(all_boxes[j][i][:, -1] >= image_thresh)[0]
-                    all_boxes[j][i] = all_boxes[j][i][keep, :]
-        _t['misc'].toc()
-
-        print 'im_detect: {:d}/{:d} {:.3f}s {:.3f}s' \
-              .format(i + 1, num_images, _t['im_detect'].average_time,
-                      _t['misc'].average_time)
+        rois_proposals = im_detect(net, im, box_proposals)
+        
+        
         #write result image
         if wrt:
             import copy
             result_im = copy.copy(im)
             savename = os.path.join(image_output_dir, os.path.basename(imdb.image_path_at(i)))
-            for j in xrange(1, imdb.num_classes):
-                result_dets = all_boxes[j][i]
-                for det in result_dets:
-                    bbox = det[:4]
-                    score = det[-1]
-                    if score > 0.3:
-                        cv2.rectangle(result_im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0))
-                        cv2.putText(result_im, '{}: {:.3f}'.format(imdb.classes[j], score), (bbox[0], bbox[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255))
+            for j in range(len(rois_proposals)):
+                box = rois_proposals[j]
+                cv2.rectangle(result_im, (box[0], box[1]), (box[2], box[3]), (0, 255, 0))
+                #cv2.putText(result_im, '{}: {:.3f}'.format(imdb.classes[j], score), (bbox[0], bbox[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255))
             cv2.imwrite(savename, result_im)
+        
+        _t['im_detect'].toc()
 
-    det_file = os.path.join(output_dir, 'detections.pkl')
-    with open(det_file, 'wb') as f:
-        cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
-
-    print 'Evaluating detections'
-    imdb.evaluate_detections(all_boxes, output_dir)
+        print 'im_detect: {:d}/{:d} {:.3f}s, {:d} roi proposals' \
+              .format(i + 1, num_images, _t['im_detect'].average_time, len(rois_proposals))
+    print 'RPN Testing Finished!'
