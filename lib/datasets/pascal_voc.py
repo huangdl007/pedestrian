@@ -138,6 +138,26 @@ class pascal_voc(imdb):
 
         return roidb
 
+    def rpn_cascade_roidb(self):
+        cache_file = os.path.join(self.cache_path,
+                                  self.name + '_rpn_cascade_roidb.pkl')
+
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                roidb = cPickle.load(fid)
+            print '{} ss roidb loaded from {}'.format(self.name, cache_file)
+            return roidb
+
+        #load gt roidb first, then calculate rpn cascade rois and labels
+        gt_roidb = self.gt_roidb()
+        roidb = self._load_rpn_cascade_roidb(gt_roidb)
+
+        with open(cache_file, 'wb') as fid:
+            cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
+        print 'wrote ss roidb to {}'.format(cache_file)
+
+        return roidb
+
     def rpn_roidb(self):
         if int(self._year) == 2007 or self._image_set != 'test':
             gt_roidb = self.gt_roidb()
@@ -175,6 +195,9 @@ class pascal_voc(imdb):
             box_list.append(boxes)
 
         return self.create_roidb_from_box_list(box_list, gt_roidb)
+
+    def _load_rpn_cascade_roidb(self, gt_roidb):
+        pass
 
     def _load_pascal_annotation(self, index):
         """
@@ -282,7 +305,7 @@ class pascal_voc(imdb):
         cachedir = os.path.join(self._devkit_path, 'annotations_cache')
         aps = []
         # The PASCAL VOC metric changed in 2010
-        use_07_metric = False
+        use_07_metric = True
         #use_07_metric = True if int(self._year) < 2010 else False
         print 'VOC07 metric? ' + ('Yes' if use_07_metric else 'No')
         if not os.path.isdir(output_dir):

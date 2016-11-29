@@ -27,6 +27,8 @@ class imdb(object):
         # Use this dict for storing dataset specific config options
         self.config = {}
 
+        self._has_landmark = True
+
     @property
     def name(self):
         return self._name
@@ -54,6 +56,13 @@ class imdb(object):
     def set_proposal_method(self, method):
         method = eval('self.' + method + '_roidb')
         self.roidb_handler = method
+
+    @property
+    def has_landmark(self):
+        return self._has_landmark
+
+    def set_has_landmark(self, flag):
+        self._has_landmark = flag
 
     @property
     def roidb(self):
@@ -109,19 +118,20 @@ class imdb(object):
             boxes[:, 0] = widths[i] - oldx2 - 1
             boxes[:, 2] = widths[i] - oldx1 - 1
             assert (boxes[:, 2] >= boxes[:, 0]).all()
-            #flipping landmarks
-            landmarks = self.roidb[i]['landmarks'].copy()
-            oldHx = landmarks[:, 0].copy()
-            oldLx = landmarks[:, 2].copy()
-            oldRx = landmarks[:, 4].copy()
-            landmarks[:, 0] = widths[i] - oldHx - 1
-            landmarks[:, 2] = widths[i] - oldLx - 1
-            landmarks[:, 4] = widths[i] - oldRx - 1
             entry = {'boxes' : boxes,
                      'gt_overlaps' : self.roidb[i]['gt_overlaps'],
                      'gt_classes' : self.roidb[i]['gt_classes'],
-                     'flipped' : True,
-                     'landmarks' : landmarks}
+                     'flipped' : True}
+            #flipping landmarks
+            if self.has_landmark:
+                landmarks = self.roidb[i]['landmarks'].copy()
+                oldHx = landmarks[:, 0].copy()
+                oldLx = landmarks[:, 2].copy()
+                oldRx = landmarks[:, 4].copy()
+                landmarks[:, 0] = widths[i] - oldHx - 1
+                landmarks[:, 2] = widths[i] - oldLx - 1
+                landmarks[:, 4] = widths[i] - oldRx - 1
+                entry['landmarks'] = landmarks
             self.roidb.append(entry)
         self._image_index = self._image_index * 2
 
