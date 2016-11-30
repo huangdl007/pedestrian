@@ -7,6 +7,7 @@
 
 import os
 from datasets.imdb import imdb
+from utils.cython_bbox import bbox_overlaps
 import datasets.ds_utils as ds_utils
 import xml.etree.ElementTree as ET
 import numpy as np
@@ -145,7 +146,7 @@ class pascal_voc(imdb):
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
                 roidb = cPickle.load(fid)
-            print '{} ss roidb loaded from {}'.format(self.name, cache_file)
+            print '{} rpn cascade roidb loaded from {}'.format(self.name, cache_file)
             return roidb
 
         #load gt roidb first, then calculate rpn cascade rois and labels
@@ -154,7 +155,7 @@ class pascal_voc(imdb):
 
         with open(cache_file, 'wb') as fid:
             cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
-        print 'wrote ss roidb to {}'.format(cache_file)
+        print 'wrote rpn cascade roidb to {}'.format(cache_file)
 
         return roidb
 
@@ -197,7 +198,49 @@ class pascal_voc(imdb):
         return self.create_roidb_from_box_list(box_list, gt_roidb)
 
     def _load_rpn_cascade_roidb(self, gt_roidb):
-        pass
+        filename = os.path.abspath(os.path.join(cfg.DATA_DIR,
+                                                'rpn_cascade_data',
+                                                self.name + '_rpn_proposals.pkl'))
+        assert os.path.exists(filename), \
+               'RPN Cascade data not found at: {}'.format(filename)
+        with open(filename, 'rb') as f:
+            rpn_proposals = cPickle.load(f)
+        # print len(rpn_proposals), rpn_proposals[0].shape
+        # print rpn_proposals[0]
+        # print gt_roidb[0]
+        # exit(1)
+        return self.create_roidb_from_box_list(rpn_proposals, gt_roidb)
+
+    def create_roidb_from_rpn_proposals(self, rpn_proposals, gt_roidb):
+        assert len(rpn_proposals) == self.num_images, \
+                'Number of boxes must match number of ground-truth images'
+        roidb = []
+        for i in xrange(self.num_images):
+            boxes = rpn_proposals[i]
+            num_boxes = boxes.shape[0]
+            max_overlaps = np.zeros((num_boxes, 1), dtype=np.float32)
+            max_classes = np.zeros((num_boxes, 1), dtype=np.float32)
+
+            if gt_roidb is not None and gt_roidb[i]['boxes'].size > 0:
+                gt_boxes = gt_roidb[i]['boxes']
+                gt_classes = gt_roidb[i]['gt_classes']
+                gt_overlaps = bbox_overlaps(boxes.astype(np.float),
+                                            gt_boxes.astype(np.float))
+                # print gt_overlaps, gt_overlaps.shape
+                # exit(1)
+                max_overlaps = gt_overlaps.max(axis=1)
+                I = np.where(max_overlaps >= cfg.TRAIN.FG_THRESH)[0]
+                max_classes[I, :] = 1
+
+
+            roidb.append({
+                'boxes' : boxes,
+                'max_classes' : max_classes,
+                'max_overlaps' : max_overlaps,
+                'flipped' : False
+            })
+
+        return roidb
 
     def _load_pascal_annotation(self, index):
         """

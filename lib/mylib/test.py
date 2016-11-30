@@ -148,11 +148,11 @@ def im_detect(net, im, boxes=None):
         assert len(im_scales) == 1, "Only single-image batch implemented"
         rois = net.blobs['rois'].data.copy()
         print rois.shape
-        exit(1)
+        #exit(1)
         # unscale back to raw image space
         boxes = rois[:, 1:5] / im_scales[0]
 
-    return boxes[:50]
+    return boxes
 
 def test_rpn(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
     """Test a Fast R-CNN network on an image database."""

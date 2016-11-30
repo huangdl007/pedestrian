@@ -92,8 +92,9 @@ def im_proposals(net, im):
             im_info=blobs['im_info'].astype(np.float32, copy=False))
 
     scale = blobs['im_info'][0, 2]
-    boxes = blobs_out['rois'][:, 1:].copy() / scale
-    scores = blobs_out['scores'].copy()
+    rois = net.blobs['rois'].data.copy()
+    boxes = rois[:, 1:] / scale
+    scores = net.blobs['rpn_cls_prob'].data.copy()
     return boxes, scores
 
 def imdb_proposals(net, imdb):

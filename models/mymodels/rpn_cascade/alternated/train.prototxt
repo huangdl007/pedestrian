@@ -5,6 +5,9 @@ layer {
   top: 'data'
   top: 'rois'
   top: 'labels'
+  top: 'bbox_targets'
+  top: 'bbox_inside_weights'
+  top: 'bbox_outside_weights'
   python_param {
     module: 'roi_data_layer.layer'
     layer: 'RoIDataLayer'
@@ -12,6 +15,13 @@ layer {
   }
 }
 
+layer {
+    name: "ingore_blobs"
+    type: "Silence"
+    bottom: "bbox_targets"
+    bottom: "bbox_inside_weights"
+    bottom: "bbox_outside_weights"
+}
 # ------------------------ conv1 -----------------------------
 layer {
     bottom: "data"
@@ -3617,5 +3627,16 @@ layer {
    top: "loss_cls"
    loss_weight: 1
    propagate_down: true
+   propagate_down: false
+}
+
+layer {
+   name: "accuarcy"
+   type: "Accuracy"
+   bottom: "rpn_cascade_cls_score"
+   bottom: "labels"
+   top: "accuarcy"
+   #include: { phase: TEST }
+   propagate_down: false
    propagate_down: false
 }
