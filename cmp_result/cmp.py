@@ -75,29 +75,30 @@ def do_python_eval(resultType='old', thres=0.5):
 
     return rec[-1], ap
 
-def get_recall(threshs, resultType='old'):
-	detection_file = resultType + '_detections.pkl'
-	with open(detection_file, 'rb') as f:
-		all_boxes = cPickle.load(f)
-	write_voc_results_file(all_boxes, resultType)
-	
-	recalls = []
-	aps = []
-	for th in threshs:
-		rec, ap = do_python_eval(resultType, th)
-		recalls.append(rec)
-		aps.append(ap)
+def get_recall(thresholds, resultType='old'):
+    detection_file = resultType + '_detections.pkl'
+    with open(detection_file, 'rb') as f:
+       all_boxes = cPickle.load(f)
+    print len(all_boxes[0])
+    write_voc_results_file(all_boxes, resultType)
+    
+    recalls = []
+    aps = []
+    for th in thresholds:
+        rec, ap = do_python_eval(resultType, th)
+        recalls.append(rec)
+        aps.append(ap)
+        print th, rec, ap
 
-	return recalls, aps
+    return recalls, aps
 
 if __name__ == '__main__':
-	threshs = np.arange(0.5, 1.05, 0.05)
+    thresholds = np.arange(0.5, 1.0, 0.05)
+    old_recalls, old_aps = get_recall(thresholds, 'old')
+    new_recalls, new_aps = get_recall(thresholds, 'new')
 
-	old_recalls, old_aps = get_recall(threshs, 'old')
-	new_recalls, new_aps = get_recall(threshs, 'new')
-
-	plt.figure()
-	plt.plot(threshs, old_aps, label="old result",color="red",linewidth=2)
-	plt.plot(threshs, new_aps, label="new result",color="blue",linewidth=2)
-	plt.xlim(0.5,1.0)
-	plt.savefig('recall curve.jpg')
+    plt.figure()
+    plt.plot(thresholds, old_recalls, label="old result",color="red",linewidth=2)
+    plt.plot(thresholds, new_recalls, label="new result",color="blue",linewidth=2)
+    plt.xlim(0.5,1.0)
+    plt.savefig('recall curve.jpg')

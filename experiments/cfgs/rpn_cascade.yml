@@ -1,0 +1,8 @@
+EXP_DIR: rpn_cascade
+TRAIN:
+  HAS_RPN: False
+  IMS_PER_BATCH: 1
+  RPN_POSITIVE_OVERLAP: 0.7
+  BG_THRESH_LO: 0.1
+TEST:
+  HAS_RPN: False

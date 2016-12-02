@@ -1,39 +1,22 @@
-name: "RPN_Cascade_50_Train"
-layer {
-  name: 'input-data'
-  type: 'Python'
-  top: 'data'
-  top: 'sourcerois'
-  top: 'sourcelabels'
-  top: 'bbox_targets'
-  top: 'bbox_inside_weights'
-  top: 'bbox_outside_weights'
-  python_param {
-    module: 'roi_data_layer.layer'
-    layer: 'RoIDataLayer'
-    param_str: "'num_classes': 2"
-  }
+name: "RPN_Cascade_50_Test"
+input: "data"
+input_shape {
+  dim: 1
+  dim: 3
+  dim: 224
+  dim: 224
 }
 
-layer {
-    name: "ingore_blobs"
-    type: "Silence"
-    bottom: "bbox_targets"
-    bottom: "bbox_inside_weights"
-    bottom: "bbox_outside_weights"
+input: "rois"
+input_shape {
+  dim: 1 # to be changed on-the-fly to num ROIs
+  dim: 5 # [batch ind, x1, y1, x2, y2] zero-based indexing
 }
 
-layer {
-  name: 'PNroiControl'
-  type: 'Python'
-  bottom: 'sourcerois'
-  bottom: 'sourcelabels'
-  top: 'rois'
-  top: 'labels'
-  python_param {
-    module: 'rpn.pnroi_control_layer'
-    layer: 'PNroiControlLayer'
-  }
+input: "labels"
+input_shape {
+  dim: 1 # to be changed on-the-fly to num ROIs
+  dim: 1
 }
 
 # ------------------------ conv1 -----------------------------
@@ -3634,23 +3617,18 @@ layer {
 
 #########################CLS Loss################################
 layer {
-   name: "loss"
-   type: "SoftmaxWithLoss"
+   name: "rpn_cascade_cls_prob"
+   type: "Softmax"
    bottom: "rpn_cascade_cls_score"
-   bottom: "labels"
-   top: "loss_cls"
-   loss_weight: 1
-   propagate_down: true
-   propagate_down: false
+   top: "rpn_cascade_cls_prob"
 }
 
 layer {
-   name: "accuarcy"
+   name: "accuracy"
    type: "Accuracy"
    bottom: "rpn_cascade_cls_score"
    bottom: "labels"
-   top: "accuarcy"
-   #include: { phase: TEST }
+   top: "accuracy"
    propagate_down: false
    propagate_down: false
 }

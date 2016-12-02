@@ -1,5 +1,6 @@
 from fast_rcnn.config import cfg, get_output_dir
 from fast_rcnn.bbox_transform import clip_boxes, bbox_transform_inv
+from utils.cython_bbox import bbox_overlaps
 import argparse
 from utils.timer import Timer
 import numpy as np
@@ -147,12 +148,33 @@ def im_detect(net, im, boxes=None):
     if cfg.TEST.HAS_RPN:
         assert len(im_scales) == 1, "Only single-image batch implemented"
         rois = net.blobs['rois'].data.copy()
-        print rois.shape
+        #print rois.shape
         #exit(1)
         # unscale back to raw image space
         boxes = rois[:, 1:5] / im_scales[0]
 
     return boxes
+
+def accuracy_detect(net, im, boxes=None, labels=None):
+    blobs, im_scales = _get_blobs(im, boxes)
+
+    # reshape network inputs
+    net.blobs['data'].reshape(*(blobs['data'].shape))
+    net.blobs['rois'].reshape(*(blobs['rois'].shape))
+    net.blobs['labels'].reshape(*(labels.shape))
+
+    # do forward
+    forward_kwargs = {'data': blobs['data'].astype(np.float32, copy=False)}
+    forward_kwargs['rois'] = blobs['rois'].astype(np.float32, copy=False)
+    forward_kwargs['labels'] = labels.astype(np.float32, copy=False)
+    blobs_out = net.forward(**forward_kwargs)
+
+    assert len(im_scales) == 1, "Only single-image batch implemented"
+    #print net.blobs.items()
+    accuracy = net.blobs['accuracy'].data.copy()
+    probs = net.blobs['rpn_cascade_cls_prob'].data.copy()
+    probs.reshape((300, 2))
+    return accuracy, probs
 
 def test_rpn(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
     """Test a Fast R-CNN network on an image database."""
@@ -210,3 +232,69 @@ def test_rpn(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
         print 'im_detect: {:d}/{:d} {:.3f}s, {:d} roi proposals' \
               .format(i + 1, num_images, _t['im_detect'].average_time, len(rois_proposals))
     print 'RPN Testing Finished!'
+
+def get_rois_labels(rois, gt_boxes):
+    labels = np.zeros((len(rois), 1), dtype=np.float32)
+
+    gt_overlaps = bbox_overlaps(rois.astype(np.float),
+                                            gt_boxes.astype(np.float))
+    max_overlaps = gt_overlaps.max(axis=1)
+    I = np.where(max_overlaps >= 0.5)[0]
+    labels[I, :] = 1
+
+    return labels
+
+def test_rpn_cascade_accuracy(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
+    """Test a Fast R-CNN network on an image database."""
+    num_images = len(imdb.image_index)
+    # all detections are collected into:
+    #    all_boxes[cls][image] = N x 5 array of detections in
+    #    (x1, y1, x2, y2, score)
+    accuracys = [[] for _ in xrange(num_images)]
+    label_nums = [[] for _ in xrange(num_images)]
+
+    # timers
+    _t = {'accuracy_detect' : Timer(), 'misc' : Timer()}
+
+    output_dir = get_output_dir(imdb, net)
+    #result image output dir
+    if wrt:
+        image_output_dir = os.path.join(output_dir, 'result_imgs')
+        if not os.path.isdir(image_output_dir):
+            os.mkdir(image_output_dir)
+
+    roidb = imdb.roidb
+    gt_roidb = imdb.gt_roidb()
+
+    right_num = 0.0
+    total = 0.0
+    for i in xrange(num_images):
+        rois = roidb[i]['boxes']
+        labels = get_rois_labels(rois, gt_roidb[i]['boxes'])
+
+        _t['accuracy_detect'].tic()
+        im = cv2.imread(imdb.image_path_at(i))
+        accuracy, probs = accuracy_detect(net, im, rois, labels)
+        #write result image
+        if wrt:
+            import copy
+            result_im = copy.copy(im)
+            savename = os.path.join(image_output_dir, os.path.basename(imdb.image_path_at(i)))
+            for j in range(len(rois)):
+                box = rois[j]
+                if probs[j][1] > 0.5:   #foreground region
+                    cv2.rectangle(result_im, (box[0], box[1]), (box[2], box[3]), (0, 255, 0))
+                else:
+                    cv2.rectangle(result_im, (box[0], box[1]), (box[2], box[3]), (255, 255, 255))
+            cv2.imwrite(savename, result_im)
+        _t['accuracy_detect'].toc()
+
+        accuracys[i] = accuracy
+        label_nums[i] = len(labels)
+        right_num += accuracy * len(labels)
+        total += len(labels)
+        print 'accuracy_detect: {:d}/{:d} {:.3f}s, label_num: {:d}, accuracy: {:.3f}' \
+              .format(i + 1, num_images, _t['accuracy_detect'].average_time, label_nums[i], float(accuracy))
+
+    print 'Total Accuracy is:', right_num/total
+    print 'RPN Cascade Accuracy Testing Finished!'

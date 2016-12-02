@@ -4,9 +4,13 @@ caffe
 # Data
 data
 
+#python complie
+*.pyc
+
 # Logs
 experiments/logs
 mylogs
+parse_log
 
 # Output
 output

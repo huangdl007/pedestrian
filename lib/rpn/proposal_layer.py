@@ -153,6 +153,7 @@ class ProposalLayer(caffe.Layer):
         batch_inds = np.zeros((proposals.shape[0], 1), dtype=np.float32)
         blob = np.hstack((batch_inds, proposals.astype(np.float32, copy=False)))
         # print blob.shape
+        print 'proposla rois shape:',blob.shape
         top[0].reshape(*(blob.shape))
         top[0].data[...] = blob
 

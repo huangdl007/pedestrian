@@ -11,8 +11,8 @@
 
 import _init_paths
 
-from fast_rcnn.test import test_net
-from mylib.test import test_rpn
+from mylib.test import test_rpn_cascade_accuracy
+import roi_data_layer.roidb as rdl_roidb
 from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list
 from datasets.factory import get_imdb
 import caffe
@@ -88,9 +88,10 @@ if __name__ == '__main__':
     net.name = os.path.splitext(os.path.basename(args.caffemodel))[0]
 
     imdb = get_imdb(args.imdb_name)
-    imdb.competition_mode(args.comp_mode)
-    if not cfg.TEST.HAS_RPN:
-        imdb.set_proposal_method(cfg.TEST.PROPOSAL_METHOD)
+    imdb.set_proposal_method('rpn_cascade')
+    imdb.set_has_landmark(False)
+    cfg.TRAIN.HAS_RPN = False
+    print 'Preparing testing data...'
+    rdl_roidb.prepare_roidb(imdb)
 
-    test_net(net, imdb, max_per_image=args.max_per_image, vis=args.vis, wrt=args.wrt)
-    #test_rpn(net, imdb, max_per_image=args.max_per_image, vis=args.vis, wrt=args.wrt)
+    test_rpn_cascade_accuracy(net, imdb, max_per_image=args.max_per_image, vis=args.vis, wrt=args.wrt)
