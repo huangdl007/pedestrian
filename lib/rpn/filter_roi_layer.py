@@ -32,7 +32,7 @@ class FilterRoiLayer(caffe.Layer):
             #print keep
 
         rois = all_rois[keep, :]
-        print 'filtered rois shape:', rois.shape
+        #print 'filtered rois shape:', rois.shape
         top[0].reshape(*rois.shape)
         top[0].data[...] = rois
 

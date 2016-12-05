@@ -4,6 +4,7 @@ import numpy as np
 import numpy.random as npr
 from fast_rcnn.config import cfg
 
+Neg_Ratio = 1.0
 
 class PNroiControlLayer(caffe.Layer):
     """
@@ -27,8 +28,8 @@ class PNroiControlLayer(caffe.Layer):
         pos = np.where(labels == 1)[0]
         negs = np.where(labels == 0)[0]
         
-        if len(pos) != 0 and len(negs) > 1.5*len(pos):
-            negs = npr.choice(negs, size=1.5*len(pos))
+        if len(pos) != 0 and len(negs) > Neg_Ratio*len(pos):
+            negs = npr.choice(negs, size=Neg_Ratio*len(pos))
 
         keep_inds = np.append(pos, negs)
         rois = rois[keep_inds]

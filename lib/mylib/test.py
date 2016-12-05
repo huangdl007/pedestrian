@@ -268,13 +268,30 @@ def test_rpn_cascade_accuracy(net, imdb, max_per_image=100, thresh=0.5, vis=Fals
 
     right_num = 0.0
     total = 0.0
+
+    tp = 0.0
+    p_num = 0.0
+    tn = 0.0
+    n_num = 0.0
+
     for i in xrange(num_images):
         rois = roidb[i]['boxes']
         labels = get_rois_labels(rois, gt_roidb[i]['boxes'])
 
-        _t['accuracy_detect'].tic()
         im = cv2.imread(imdb.image_path_at(i))
+        _t['accuracy_detect'].tic()
         accuracy, probs = accuracy_detect(net, im, rois, labels)
+        _t['accuracy_detect'].toc()
+
+        p_num += len(np.where(labels == 1)[0])
+        n_num += len(np.where(labels == 0)[0])
+
+        for j in range(len(labels)):
+            if labels[j] == 1 and probs[j][1] > 0.5:
+                tp += 1
+            if labels[j] == 0 and probs[j][0] > 0.5:
+                tn += 1
+
         #write result image
         if wrt:
             import copy
@@ -287,7 +304,6 @@ def test_rpn_cascade_accuracy(net, imdb, max_per_image=100, thresh=0.5, vis=Fals
                 else:
                     cv2.rectangle(result_im, (box[0], box[1]), (box[2], box[3]), (255, 255, 255))
             cv2.imwrite(savename, result_im)
-        _t['accuracy_detect'].toc()
 
         accuracys[i] = accuracy
         label_nums[i] = len(labels)
@@ -296,5 +312,7 @@ def test_rpn_cascade_accuracy(net, imdb, max_per_image=100, thresh=0.5, vis=Fals
         print 'accuracy_detect: {:d}/{:d} {:.3f}s, label_num: {:d}, accuracy: {:.3f}' \
               .format(i + 1, num_images, _t['accuracy_detect'].average_time, label_nums[i], float(accuracy))
 
+    print 'Positive Accuracy is:', tp/p_num
+    print 'Negative Accuracy is:', tn/n_num
     print 'Total Accuracy is:', right_num/total
     print 'RPN Cascade Accuracy Testing Finished!'
