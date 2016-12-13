@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--iters', dest='max_iters',
                         help='number of iterations to train',
                         default=30000, type=int)
-    parser.add_argument('--weights', dest='pretrained_model',
+    parser.add_argument('--weights', dest='pretrained_model', nargs='*',
                         help='initialize with pretrained model weights',
                         default=None, type=str)
     parser.add_argument('--cfg', dest='cfg_file',

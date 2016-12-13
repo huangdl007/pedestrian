@@ -1,1 +1,1 @@
-./tools/test_rpn_cascade.py --gpu 0 --def models/mymodels/rpn_cascade/alternated/test.prototxt --net /home/wublack/R-FCN/py-R-FCN-pedestrian/output/rpn_cascade/voc_2007_trainval/resnet50_rpn_cascade_iter_15000.caffemodel --imdb voc_2007_test --cfg experiments/cfgs/rpn_cascade.yml
+./mytools/test_rpn_cascade.py --gpu 0 --def models/mymodels/rpn_cascade/alternated/test.prototxt --net /home/wublack/R-FCN/py-R-FCN-pedestrian/output/rpn_cascade/voc_2007_trainval/resnet50_rpn_cascade_iter_5000.caffemodel --imdb voc_2007_test --cfg experiments/cfgs/rpn_cascade.yml

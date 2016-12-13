@@ -46,8 +46,12 @@ if __name__ == '__main__':
         raw_data = sio.loadmat(filename)['aboxes'].ravel()
         candidate_boxes = raw_data
 
-    ar, gt_overlaps, recalls, thresholds = \
-        imdb.evaluate_recall(candidate_boxes=candidate_boxes)
+    result = imdb.evaluate_recall(candidate_boxes=candidate_boxes)
+    ar = result['ar']
+    gt_overlaps = result['gt_overlaps']
+    recalls = result['recalls']
+    thresholds = result['thresholds']
+
     print 'Method: {}'.format(args.method)
     print 'AverageRec: {:.3f}'.format(ar)
 

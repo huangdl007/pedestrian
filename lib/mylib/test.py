@@ -173,7 +173,7 @@ def accuracy_detect(net, im, boxes=None, labels=None):
     #print net.blobs.items()
     accuracy = net.blobs['accuracy'].data.copy()
     probs = net.blobs['rpn_cascade_cls_prob'].data.copy()
-    probs.reshape((300, 2))
+    #probs.reshape((300, 2))
     return accuracy, probs
 
 def test_rpn(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):

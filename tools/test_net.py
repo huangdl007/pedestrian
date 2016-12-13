@@ -54,6 +54,9 @@ def parse_args():
     parser.add_argument('--num_dets', dest='max_per_image',
                         help='max number of detections per image',
                         default=100, type=int)
+    parser.add_argument('--thresh', dest='thresh',
+                        help='Threshold for IOU',
+                        default=0.5, type=float)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -92,5 +95,5 @@ if __name__ == '__main__':
     if not cfg.TEST.HAS_RPN:
         imdb.set_proposal_method(cfg.TEST.PROPOSAL_METHOD)
 
-    test_net(net, imdb, max_per_image=args.max_per_image, vis=args.vis, wrt=args.wrt)
+    test_net(net, imdb, max_per_image=args.max_per_image, vis=args.vis, wrt=args.wrt, thresh=args.thresh)
     #test_rpn(net, imdb, max_per_image=args.max_per_image, vis=args.vis, wrt=args.wrt)
