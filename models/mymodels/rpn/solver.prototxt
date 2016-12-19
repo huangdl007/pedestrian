@@ -1,4 +1,4 @@
-train_net: "models/mymodels/rpn/train_5c.prototxt"
+train_net: "models/mymodels/rpn/stage1_rpn_train.prototxt"
 
 base_lr: 0.001
 lr_policy: "step"
@@ -13,4 +13,4 @@ weight_decay: 0.0005
 # function
 snapshot: 0
 # We still use the snapshot prefix, though
-snapshot_prefix: "resnet50_rpn"
+snapshot_prefix: "stage1_resnet50_rpn"

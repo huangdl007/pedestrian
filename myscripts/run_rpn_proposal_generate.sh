@@ -1,1 +1,1 @@
-./mytools/rpn_proposal_generate.py --gpu 0 --def models/mymodels/rpn/test_5c.prototxt --net /home/wublack/R-FCN/py-R-FCN-pedestrian/output/rpn/voc_2007_trainval/resnet50_rpn_iter_50000.caffemodel --imdb voc_2007_test
+./mytools/rpn_proposal_generate.py --gpu 0 --def models/mymodels/rfcn_rpn_cascade_50_alt/rpn_test.prototxt --net /home/wublack/R-FCN/py-R-FCN-pedestrian/output/rfcn_rpn_cascade_50_alt/voc_2007_trainval/stage1_resnet50_rpn_iter_50000.caffemodel --imdb voc_2007_trainval

@@ -13,7 +13,8 @@ class FilterRoiLayer(caffe.Layer):
     """
 
     def setup(self, bottom, top):
-
+        layer_params = yaml.load(self.param_str)
+        self._threhold = layer_params.get('threshold', 0.5)
         # sampled rpn_rois (0, x1, y1, x2, y2)
         top[0].reshape(1, 5, 1, 1)
         
@@ -25,7 +26,7 @@ class FilterRoiLayer(caffe.Layer):
         #print probs
         probs = probs[:, 1]
 
-        keep = np.where(probs > 0.5)[0]
+        keep = np.where(probs > self._threhold)[0]
         #print keep
         if len(keep) == 0:  #make sure have at least one roi
             keep = np.array([probs.argmax()])

@@ -1,19 +1,25 @@
-name: "RFCN_RPN_Cascade_50_Test"
-
-input: "data"
-input_shape {
-  dim: 1
-  dim: 3
-  dim: 224
-  dim: 224
+name: "ResNet-50_Train"
+layer {
+  name: 'input-data'
+  type: 'Python'
+  top: 'data'
+  top: 'im_info'
+  top: 'gt_boxes'
+  top: 'gt_landmarks'
+  python_param {
+    module: 'roi_data_layer.layer'
+    layer: 'RoIDataLayer'
+    param_str: "'num_classes': 2"
+  }
 }
 
-input: "im_info"
-input_shape {
-  dim: 1
-  dim: 3
+layer {
+    name: "ingore_blobs"
+    type: "Silence"
+    bottom: "gt_landmarks"
 }
 
+# ------------------------ conv1 -----------------------------
 layer {
     bottom: "data"
     top: "conv1"
@@ -3524,6 +3530,7 @@ layer {
     type: "ReLU"
 }
 
+
 #========= RPN ============
 
 layer {
@@ -3531,6 +3538,8 @@ layer {
   type: "Convolution"
   bottom: "res5c"
   top: "rpn/output"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 512
     kernel_size: 3 pad: 1 stride: 1
@@ -3550,6 +3559,8 @@ layer {
   type: "Convolution"
   bottom: "rpn/output"
   top: "rpn_cls_score"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 18   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
@@ -3557,11 +3568,14 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
   name: "rpn_bbox_pred"
   type: "Convolution"
   bottom: "rpn/output"
   top: "rpn_bbox_pred"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
   convolution_param {
     num_output: 36   # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
@@ -3569,6 +3583,7 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
    bottom: "rpn_cls_score"
    top: "rpn_cls_score_reshape"
@@ -3577,55 +3592,70 @@ layer {
    reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
 }
 
-#========= RoI Proposal ============
-
 layer {
-  name: "rpn_cls_prob"
-  type: "Softmax"
-  bottom: "rpn_cls_score_reshape"
-  top: "rpn_cls_prob"
-}
-layer {
-  name: 'rpn_cls_prob_reshape'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob'
-  top: 'rpn_cls_prob_reshape'
-  reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
-}
-layer {
-  name: 'proposal'
+  name: 'rpn-data'
   type: 'Python'
-  bottom: 'rpn_cls_prob_reshape'
-  bottom: 'rpn_bbox_pred'
+  bottom: 'rpn_cls_score'
+  bottom: 'gt_boxes'
   bottom: 'im_info'
-  top: 'rpn_rois'
+  bottom: 'data'
+  top: 'rpn_labels'
+  top: 'rpn_bbox_targets'
+  top: 'rpn_bbox_inside_weights'
+  top: 'rpn_bbox_outside_weights'
   python_param {
-    module: 'rpn.proposal_layer'
-    layer: 'ProposalLayer'
+    module: 'rpn.anchor_target_layer'
+    layer: 'AnchorTargetLayer'
     param_str: "'feat_stride': 16"
   }
 }
 
-########################rpn cascade####################
-
 layer {
-  name: "roi_pool5"
-  type: "ROIPooling"
-  bottom: "res5c"
-  bottom: "rpn_rois"
-  top: "pool5"
-  roi_pooling_param {
-    pooled_w: 7
-    pooled_h: 7
-    spatial_scale: 0.0625 # 1/16
+  name: "rpn_loss_cls"
+  type: "SoftmaxWithLoss"
+  bottom: "rpn_cls_score_reshape"
+  bottom: "rpn_labels"
+  propagate_down: 1
+  propagate_down: 0
+  top: "rpn_cls_loss"
+  loss_weight: 1
+  loss_param {
+    ignore_label: -1
+    normalize: true
   }
 }
 
 layer {
-    bottom: "pool5"
+  name: "rpn_loss_bbox"
+  type: "SmoothL1Loss"
+  bottom: "rpn_bbox_pred"
+  bottom: "rpn_bbox_targets"
+  bottom: 'rpn_bbox_inside_weights'
+  bottom: 'rpn_bbox_outside_weights'
+  top: "rpn_loss_bbox"
+  loss_weight: 1
+  smooth_l1_loss_param { sigma: 3.0 }
+}
+
+
+#####################rpn cascade######################
+# Dummy layers so that initial parameters are saved into the output net
+layer {
+    name: "dummy_roi_pool5_res5c"
+    type: "DummyData"
+    top: "dummy_roi_pool5_res5c"
+    dummy_data_param {
+        shape { dim: 1 dim: 2048 dim: 7 dim: 7 }
+        data_filler { type: "gaussian" std: 0.01 }
+    }
+}
+
+layer {
+    bottom: "dummy_roi_pool5_res5c"
     top: "rpn_cascade_conv"
     name: "rpn_cascade_conv"
     type: "Convolution"
+    #log_data: true
     convolution_param {
         num_output: 1024
         kernel_size: 1
@@ -3639,6 +3669,8 @@ layer {
             value: 0
         }
     }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3653,6 +3685,7 @@ layer {
     top: "rpn_cascade_cls"
     name: "rpn_cascade_cls"
     type: "Convolution"
+    #log_data: true
     convolution_param {
         num_output: 2 #(background and region)
         kernel_size: 1
@@ -3666,43 +3699,16 @@ layer {
             value: 0
         }
     }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
 }
-
 layer {
-    bottom: "rpn_cascade_cls"
-    top: "rpn_cascade_cls_score"
-    name: "rpn_cascade_pooled_cls"
-    type: "Pooling"
-    pooling_param {
-        pool: AVE
-        kernel_size: 7
-        stride: 7
-    }
+  name: "silence_rpn_cascade_cls_score"
+  type: "Silence"
+  bottom: "rpn_cascade_cls"
 }
 
-#########################CLS Prob################################
-layer {
-   name: "rpn_cascade_cls_prob"
-   type: "Softmax"
-   bottom: "rpn_cascade_cls_score"
-   top: "rpn_cascade_cls_prob"
-}
-
-layer {
-  name: 'roi-filter'
-  type: 'Python'
-  bottom: 'rpn_rois'
-  bottom: 'rpn_cascade_cls_prob'
-  top: 'rois'
-  python_param {
-    module: 'rpn.filter_roi_layer'
-    layer: 'FilterRoiLayer'
-    param_str: "'threshold': 0.5"
-  }
-}
-
-########################################
-#----------------------new conv layer------------------
+#####################rfcn######################
 layer {
     bottom: "res5c"
     top: "conv_new_1"
@@ -3721,6 +3727,8 @@ layer {
             value: 0
         }
     }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3748,6 +3756,8 @@ layer {
             value: 0
         }
     }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 layer {
     bottom: "conv_new_1"
@@ -3767,93 +3777,34 @@ layer {
             value: 0
         }
     }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
 }
-
-#--------------position sensitive RoI pooling--------------
 layer {
-    bottom: "rfcn_cls"
-    bottom: "rois"
-    top: "psroipooled_cls_rois"
-    name: "psroipooled_cls_rois"
-    type: "PSROIPooling"
-    psroi_pooling_param {
-        spatial_scale: 0.0625
-        output_dim: 2
-        group_size: 7
-    }
-}
-
-layer {
-    bottom: "psroipooled_cls_rois"
-    top: "cls_score"
-    name: "ave_cls_score_rois"
-    type: "Pooling"
-    pooling_param {
-        pool: AVE
-        kernel_size: 7
-        stride: 7
-    }
-}
-
-
-layer {
-    bottom: "rfcn_bbox"
-    bottom: "rois"
-    top: "psroipooled_loc_rois"
-    name: "psroipooled_loc_rois"
-    type: "PSROIPooling"
-    psroi_pooling_param {
-        spatial_scale: 0.0625
-        output_dim: 8
-        group_size: 7
-    }
-}
-
-layer {
-    bottom: "psroipooled_loc_rois"
-    top: "bbox_pred_pre"
-    name: "ave_bbox_pred_rois"
-    type: "Pooling"
-    pooling_param {
-        pool: AVE
-        kernel_size: 7
-        stride: 7
-    }
-}
-
-
-#-----------------------output------------------------
-layer {
-   name: "cls_probility"
-   type: "Softmax"
-   bottom: "cls_score"
-   top: "cls_prob_pre"
-}
-
-layer {
-    name: "cls_prob_reshape"
-    type: "Reshape"
-    bottom: "cls_prob_pre"
-    top: "cls_prob"
-    reshape_param {
-        shape {
-            dim: -1
-            dim: 2
+    bottom: "conv_new_1"
+    top: "rfcn_landmark"
+    name: "rfcn_landmark"
+    type: "Convolution"
+    convolution_param {
+        num_output: 294 #6*(7^2) lm_num*(score_maps_size^2)
+        kernel_size: 1
+        pad: 0
+        weight_filler {
+            type: "gaussian"
+            std: 0.01
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
         }
     }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
 }
-
 layer {
-    name: "bbox_pred_reshape"
-    type: "Reshape"
-    bottom: "bbox_pred_pre"
-    top: "bbox_pred"
-    reshape_param {
-        shape {
-            dim: -1
-            dim: 8
-        }
-    }
+  name: "silence_rfcn"
+  type: "Silence"
+  bottom: "rfcn_cls"
+  bottom: "rfcn_bbox"
+  bottom: "rfcn_landmark"
 }
-
-

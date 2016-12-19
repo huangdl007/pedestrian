@@ -1,4 +1,4 @@
-EXP_DIR: rfcn_rpn_cascade_50
+EXP_DIR: rfcn_rpn_cascade_50_alt
 TRAIN:
   HAS_RPN: True
   IMS_PER_BATCH: 1

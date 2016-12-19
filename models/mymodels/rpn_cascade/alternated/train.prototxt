@@ -3564,8 +3564,10 @@ layer {
 layer {
     bottom: "pool5"
     top: "rpn_cascade_conv"
-    name: "rpn_cascade_conv"
+    name: "rpn_cascade_convf"
     type: "Convolution"
+    param { lr_mult: 1.0 }
+    param { lr_mult: 2.0 }
     convolution_param {
         num_output: 1024
         kernel_size: 1
@@ -3579,12 +3581,6 @@ layer {
             value: 0
         }
     }
-    param {
-        lr_mult: 1.0
-    }
-    param {
-        lr_mult: 2.0
-    }
 }
 
 layer {
@@ -3597,8 +3593,10 @@ layer {
 layer {
     bottom: "rpn_cascade_conv"
     top: "rpn_cascade_cls"
-    name: "rpn_cascade_cls"
+    name: "rpn_cascade_clsf"
     type: "Convolution"
+    param { lr_mult: 1.0 }
+    param { lr_mult: 2.0 }
     convolution_param {
         num_output: 2 #(background and region)
         kernel_size: 1
@@ -3611,12 +3609,6 @@ layer {
             type: "constant"
             value: 0
         }
-    }
-    param {
-        lr_mult: 1.0
-    }
-    param {
-        lr_mult: 2.0
     }
 }
 

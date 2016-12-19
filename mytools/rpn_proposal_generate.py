@@ -61,7 +61,7 @@ def rpn_generate(imdb_name=None, rpn_model_path=None, rpn_test_prototxt=None):
     """
 
     cfg.TEST.RPN_PRE_NMS_TOP_N = -1     # no pre NMS filtering
-    cfg.TEST.RPN_POST_NMS_TOP_N = 300  # limit top boxes after NMS
+    cfg.TEST.RPN_POST_NMS_TOP_N = 2000  # limit top boxes after NMS
     print 'RPN model: {}'.format(rpn_model_path)
     print('Using config:')
     pprint.pprint(cfg)
@@ -102,6 +102,6 @@ if __name__ == '__main__':
         cfg_from_list(args.set_cfgs)
     cfg.GPU_ID = args.gpu_id
 
-    cfg.EXP_DIR = 'rpn'
+    cfg.EXP_DIR = 'rfcn_rpn_cascade_50_alt'
 
     rpn_generate(imdb_name=args.imdb_name, rpn_model_path=args.caffemodel, rpn_test_prototxt=args.prototxt)

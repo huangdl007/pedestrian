@@ -1,8 +1,8 @@
-train_net: "models/mymodels/rfcn_rpn_cascade_50/train_without_rpn_cascade.prototxt"
+train_net: "models/mymodels/rfcn_rpn_cascade_50_alt/stage1_rpn_cascade_train.prototxt"
 base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1
-stepsize: 35000
+stepsize: 5000
 display: 20
 
 momentum: 0.9
@@ -11,6 +11,6 @@ weight_decay: 0.0005
 # function
 snapshot: 0
 # We still use the snapshot prefix, though
-snapshot_prefix: "resnet50_rfcn_without_rpn_cascade"
+snapshot_prefix: "stage1_resnet50_rpn_cascade"
 iter_size: 2
 # debug_info: true
