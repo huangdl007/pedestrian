@@ -126,6 +126,8 @@ __C.TRAIN.RPN_POSITIVE_WEIGHT = -1.0
 # whether use class aware box or not
 __C.TRAIN.AGONISTIC = False
 
+# whether is alt training or not
+__C.TRAIN.ALT = False
 #
 # Testing options
 #

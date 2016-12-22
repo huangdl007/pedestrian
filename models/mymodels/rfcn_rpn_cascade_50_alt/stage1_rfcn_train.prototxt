@@ -6,11 +6,17 @@ layer {
   top: 'im_info'
   top: 'gt_boxes'
   top: 'gt_landmarks'
+  top: 'precomputed_rois'
   python_param {
     module: 'roi_data_layer.layer'
     layer: 'RoIDataLayer'
     param_str: "'num_classes': 2"
   }
+}
+layer {
+  name: "silence_iminfo"
+  type: "Silence"
+  bottom: "im_info"
 }
 
 # ------------------------ conv1 -----------------------------
@@ -3573,78 +3579,45 @@ layer {
 }
 
 layer {
-   bottom: "rpn_cls_score"
-   top: "rpn_cls_score_reshape"
-   name: "rpn_cls_score_reshape"
-   type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+  name: "silence_rpn"
+  type: "Silence"
+  bottom: "rpn_cls_score"
+  bottom: "rpn_bbox_pred"
 }
 
-#========= RoI Proposal ============
-
+#####################rpn cascade######################
+# Dummy layers so that initial parameters are saved into the output net
 layer {
-  name: "rpn_cls_prob"
-  type: "Softmax"
-  bottom: "rpn_cls_score_reshape"
-  top: "rpn_cls_prob"
-}
-
-layer {
-  name: 'rpn_cls_prob_reshape'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob'
-  top: 'rpn_cls_prob_reshape'
-  reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
+    name: "dummy_roi_pool5_res5c"
+    type: "DummyData"
+    top: "dummy_roi_pool5_res5c"
+    dummy_data_param {
+        shape { dim: 1 dim: 2048 dim: 7 dim: 7 }
+        data_filler { type: "gaussian" std: 0.01 }
+    }
 }
 
 layer {
-  name: 'proposal'
-  type: 'Python'
-  bottom: 'rpn_cls_prob_reshape'
-  bottom: 'rpn_bbox_pred'
-  bottom: 'im_info'
-  top: 'rpn_rois'
-  python_param {
-    module: 'rpn.proposal_layer'
-    layer: 'ProposalLayer'
-    param_str: "'feat_stride': 16"
-  }
-}
-
-
-########################rpn cascade####################
-
-layer {
-  name: "roi_pool5c"
-  type: "ROIPooling"
-  bottom: "res5c"
-  bottom: "rpn_rois"
-  top: "pool5c"
-  roi_pooling_param {
-    pooled_w: 7
-    pooled_h: 7
-    spatial_scale: 0.0625 # 1/16
-  }
-}
-
-layer {
-    bottom: "pool5c"
+    bottom: "dummy_roi_pool5_res5c"
     top: "rpn_cascade_conv"
     name: "rpn_cascade_conv"
     type: "Convolution"
+    #log_data: true
     convolution_param {
         num_output: 1024
         kernel_size: 1
         pad: 0
+        weight_filler {
+            type: "gaussian"
+            std: 0.01
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
     }
-    param {
-        lr_mult: 0.0
-        decay_mult: 0.0
-    }
-    param {
-        lr_mult: 0.0
-        decay_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3659,59 +3632,34 @@ layer {
     top: "rpn_cascade_cls"
     name: "rpn_cascade_cls"
     type: "Convolution"
+    #log_data: true
     convolution_param {
         num_output: 2 #(background and region)
         kernel_size: 1
         pad: 0
+        weight_filler {
+            type: "gaussian"
+            std: 0.01
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
     }
-    param {
-        lr_mult: 0.0
-        decay_mult: 0.0
-    }
-    param {
-        lr_mult: 0.0
-        decay_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
 }
-
 layer {
-    bottom: "rpn_cascade_cls"
-    top: "rpn_cascade_cls_score"
-    name: "rpn_cascade_pooled_cls"
-    type: "Pooling"
-    pooling_param {
-        pool: AVE
-        kernel_size: 7
-        stride: 7
-    }
-}
-
-#########################CLS Prob################################
-layer {
-   name: "rpn_cascade_cls_prob"
-   type: "Softmax"
-   bottom: "rpn_cascade_cls_score"
-   top: "rpn_cascade_cls_prob"
-}
-
-layer {
-  name: 'roi-filter'
-  type: 'Python'
-  bottom: 'rpn_rois'
-  bottom: 'rpn_cascade_cls_prob'
-  top: 'filtered_rois'
-  python_param {
-    module: 'rpn.filter_roi_layer'
-    layer: 'FilterRoiLayer'
-    param_str: "'threshold': 0.3"
-  }
+  name: "silence_rpn_cascade_cls_score"
+  type: "Silence"
+  bottom: "rpn_cascade_cls"
 }
 
 ########################################
 layer {
   name: 'roi-data'
   type: 'Python'
-  bottom: 'filtered_rois'
+  bottom: 'precomputed_rois'
   bottom: 'gt_boxes'
   bottom: 'gt_landmarks'
   top: 'rois'

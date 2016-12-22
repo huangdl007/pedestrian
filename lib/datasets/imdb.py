@@ -122,6 +122,7 @@ class imdb(object):
                      'gt_overlaps' : self.roidb[i]['gt_overlaps'],
                      'gt_classes' : self.roidb[i]['gt_classes'],
                      'flipped' : True}
+            
             #flipping landmarks
             if self.has_landmark:
                 landmarks = self.roidb[i]['landmarks'].copy()
@@ -132,6 +133,17 @@ class imdb(object):
                 landmarks[:, 2] = widths[i] - oldLx - 1
                 landmarks[:, 4] = widths[i] - oldRx - 1
                 entry['landmarks'] = landmarks
+
+            # flipping precomputed rois
+            if cfg.TRAIN.ALT:
+                rois = self.roidb[i]['precomputed_rois'].copy()
+                oldx1 = rois[:, 1].copy()
+                oldx2 = rois[:, 3].copy()
+                rois[:, 1] = widths[i] - oldx2 - 1
+                rois[:, 3] = widths[i] - oldx1 - 1
+                assert (rois[:, 3] >= rois[:, 1]).all()
+                entry['precomputed_rois'] = rois
+
             self.roidb.append(entry)
         self._image_index = self._image_index * 2
 

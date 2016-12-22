@@ -111,6 +111,40 @@ class pascal_voc(imdb):
 
         return gt_roidb
 
+    def alt_roidb(self):
+        cache_file = os.path.join(self.cache_path, self.name + '_alt_roidb.pkl')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                roidb = cPickle.load(fid)
+            print '{} alt roidb loaded from {}'.format(self.name, cache_file)
+            return roidb
+
+        #load ground truth roidb first
+        roidb = self.gt_roidb()
+        #load precomputed rois
+        filename = os.path.abspath(os.path.join(cfg.DATA_DIR,
+                                                'rfcn_alt_data',
+                                                self.name + '_rois.pkl'))
+        assert os.path.exists(filename), \
+               'Precomputed ROIs data not found at: {}'.format(filename)
+        with open(filename, 'rb') as f:
+            rois = cPickle.load(f)
+
+        assert len(roidb) == len(rois), \
+                'Number of roidb must match number of rois'
+        for i in xrange(self.num_images):
+            precomputed_rois = np.array(rois[i])
+            precomputed_rois = np.insert(precomputed_rois, 0, values=np.zeros(len(rois[i])), axis=1)
+            roidb[i]['precomputed_rois'] = precomputed_rois
+
+        #print roidb[0]
+        #exit(1)
+        with open(cache_file, 'wb') as fid:
+            cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
+        print 'wrote alt roidb to {}'.format(cache_file)
+
+        return roidb
+
     def selective_search_roidb(self):
         """
         Return the database of selective search regions of interest.
