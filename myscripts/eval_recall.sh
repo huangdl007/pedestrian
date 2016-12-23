@@ -1,0 +1,1 @@
+./tools/eval_recall.py --imdb voc_2007_test --method rpn --rpn-file output/rfcn_rpn_cascade_50_alt/voc_2007_test/stage2_resnet50_rpn_iter_50000_2000_proposals.pkl

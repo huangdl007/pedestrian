@@ -47,9 +47,10 @@ def get_minibatch(roidb, num_classes):
         blobs['im_info'] = np.array(
             [[im_blob.shape[2], im_blob.shape[3], im_scales[0]]],
             dtype=np.float32)
-        precomputed_rois = roidb[0]['precomputed_rois'].copy()
-        precomputed_rois[:, 1:5] = precomputed_rois[:, 1:5] * im_scales[0]
-        blobs['precomputed_rois'] = precomputed_rois
+        if cfg.TRAIN.ALT:
+            precomputed_rois = roidb[0]['precomputed_rois'].copy()
+            precomputed_rois[:, 1:5] = precomputed_rois[:, 1:5] * im_scales[0]
+            blobs['precomputed_rois'] = precomputed_rois
         
     else: # not using RPN
         # Now, build the region of interest and label blobs

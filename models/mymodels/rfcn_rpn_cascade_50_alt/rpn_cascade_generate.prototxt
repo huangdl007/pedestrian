@@ -3598,7 +3598,7 @@ layer {
   bottom: 'rpn_cls_prob_reshape'
   bottom: 'rpn_bbox_pred'
   bottom: 'im_info'
-  top: 'rois'
+  top: 'rpn_rois'
   python_param {
     module: 'rpn.proposal_layer'
     layer: 'ProposalLayer'
@@ -3606,14 +3606,25 @@ layer {
   }
 }
 
+########################rpn cascade####################
 
-
-########################################
-#----------------------new conv layer------------------
 layer {
-    bottom: "res5c"
-    top: "conv_new_1"
-    name: "conv_new_1"
+  name: "roi_pool5"
+  type: "ROIPooling"
+  bottom: "res5c"
+  bottom: "rpn_rois"
+  top: "pool5"
+  roi_pooling_param {
+    pooled_w: 7
+    pooled_h: 7
+    spatial_scale: 0.0625 # 1/16
+  }
+}
+
+layer {
+    bottom: "pool5"
+    top: "rpn_cascade_conv"
+    name: "rpn_cascade_conv"
     type: "Convolution"
     convolution_param {
         num_output: 1024
@@ -3631,38 +3642,19 @@ layer {
 }
 
 layer {
-    bottom: "conv_new_1"
-    top: "conv_new_1"
-    name: "conv_new_1_relu"
+    bottom: "rpn_cascade_conv"
+    top: "rpn_cascade_conv"
+    name: "rpn_cascade_conv_relu"
     type: "ReLU"
 }
 
 layer {
-    bottom: "conv_new_1"
-    top: "rfcn_cls"
-    name: "rfcn_cls"
+    bottom: "rpn_cascade_conv"
+    top: "rpn_cascade_cls"
+    name: "rpn_cascade_cls"
     type: "Convolution"
     convolution_param {
-        num_output: 98 #2*(7^2) cls_num*(score_maps_size^2)
-        kernel_size: 1
-        pad: 0
-        weight_filler {
-            type: "gaussian"
-            std: 0.01
-        }
-        bias_filler {
-            type: "constant"
-            value: 0
-        }
-    }
-}
-layer {
-    bottom: "conv_new_1"
-    top: "rfcn_bbox"
-    name: "rfcn_bbox"
-    type: "Convolution"
-    convolution_param {
-        num_output: 392 #8*(7^2) cls_num*(score_maps_size^2)
+        num_output: 2 #(background and region)
         kernel_size: 1
         pad: 0
         weight_filler {
@@ -3676,24 +3668,10 @@ layer {
     }
 }
 
-#--------------position sensitive RoI pooling--------------
 layer {
-    bottom: "rfcn_cls"
-    bottom: "rois"
-    top: "psroipooled_cls_rois"
-    name: "psroipooled_cls_rois"
-    type: "PSROIPooling"
-    psroi_pooling_param {
-        spatial_scale: 0.0625
-        output_dim: 2
-        group_size: 7
-    }
-}
-
-layer {
-    bottom: "psroipooled_cls_rois"
-    top: "cls_score"
-    name: "ave_cls_score_rois"
+    bottom: "rpn_cascade_cls"
+    top: "rpn_cascade_cls_score"
+    name: "rpn_cascade_pooled_cls"
     type: "Pooling"
     pooling_param {
         pool: AVE
@@ -3702,65 +3680,10 @@ layer {
     }
 }
 
-
+#########################CLS Prob################################
 layer {
-    bottom: "rfcn_bbox"
-    bottom: "rois"
-    top: "psroipooled_loc_rois"
-    name: "psroipooled_loc_rois"
-    type: "PSROIPooling"
-    psroi_pooling_param {
-        spatial_scale: 0.0625
-        output_dim: 8
-        group_size: 7
-    }
-}
-
-layer {
-    bottom: "psroipooled_loc_rois"
-    top: "bbox_pred_pre"
-    name: "ave_bbox_pred_rois"
-    type: "Pooling"
-    pooling_param {
-        pool: AVE
-        kernel_size: 7
-        stride: 7
-    }
-}
-
-
-#-----------------------output------------------------
-layer {
-   name: "cls_probility"
+   name: "rpn_cascade_cls_prob"
    type: "Softmax"
-   bottom: "cls_score"
-   top: "cls_prob_pre"
+   bottom: "rpn_cascade_cls_score"
+   top: "rpn_cascade_cls_prob"
 }
-
-layer {
-    name: "cls_prob_reshape"
-    type: "Reshape"
-    bottom: "cls_prob_pre"
-    top: "cls_prob"
-    reshape_param {
-        shape {
-            dim: -1
-            dim: 2
-        }
-    }
-}
-
-layer {
-    name: "bbox_pred_reshape"
-    type: "Reshape"
-    bottom: "bbox_pred_pre"
-    top: "bbox_pred"
-    reshape_param {
-        shape {
-            dim: -1
-            dim: 8
-        }
-    }
-}
-
-

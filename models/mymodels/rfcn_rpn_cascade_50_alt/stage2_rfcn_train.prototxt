@@ -1,19 +1,25 @@
-name: "RFCN_RPN_Cascade_50_Test"
-
-input: "data"
-input_shape {
-  dim: 1
-  dim: 3
-  dim: 224
-  dim: 224
+name: "RFCN_RPN_Cascade_50_Train"
+layer {
+  name: 'input-data'
+  type: 'Python'
+  top: 'data'
+  top: 'im_info'
+  top: 'gt_boxes'
+  top: 'gt_landmarks'
+  top: 'precomputed_rois'
+  python_param {
+    module: 'roi_data_layer.layer'
+    layer: 'RoIDataLayer'
+    param_str: "'num_classes': 2"
+  }
+}
+layer {
+  name: "silence_iminfo"
+  type: "Silence"
+  bottom: "im_info"
 }
 
-input: "im_info"
-input_shape {
-  dim: 1
-  dim: 3
-}
-
+# ------------------------ conv1 -----------------------------
 layer {
     bottom: "data"
     top: "conv1"
@@ -25,12 +31,8 @@ layer {
         pad: 3
         stride: 2
     }
-    param {
-        lr_mult: 0.0
-    }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
     
 }
 
@@ -105,9 +107,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -162,9 +162,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -226,9 +224,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -290,9 +286,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -362,9 +356,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -426,9 +418,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -490,9 +480,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -562,9 +550,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -626,9 +612,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -690,9 +674,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 0.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -762,9 +744,7 @@ layer {
         stride: 2
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -819,9 +799,7 @@ layer {
         stride: 2
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -883,9 +861,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -947,9 +923,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1019,11 +993,8 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
-
 layer {
     bottom: "res3b_branch2a"
     top: "res3b_branch2a"
@@ -1083,9 +1054,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1147,9 +1116,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1219,9 +1186,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1283,9 +1248,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1347,9 +1310,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1419,9 +1380,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1483,9 +1442,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1547,9 +1504,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1619,9 +1574,7 @@ layer {
         stride: 2
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1676,9 +1629,7 @@ layer {
         stride: 2
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1740,9 +1691,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1804,9 +1753,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1876,9 +1823,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -1940,9 +1885,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2004,9 +1947,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2063,7 +2004,6 @@ layer {
     name: "res4b_relu"
     type: "ReLU"
 }
-
 layer {
     bottom: "res4b"
     top: "res4c_branch2a"
@@ -2076,9 +2016,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2140,9 +2078,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2204,9 +2140,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2276,9 +2210,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2340,9 +2272,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2404,9 +2334,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2476,9 +2404,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2540,9 +2466,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2604,9 +2528,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2676,9 +2598,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2740,9 +2660,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2804,9 +2722,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2876,9 +2792,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2933,9 +2847,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -2998,9 +2910,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3062,9 +2972,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3134,9 +3042,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3199,9 +3105,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3263,9 +3167,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3335,9 +3237,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3400,9 +3300,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3464,9 +3362,7 @@ layer {
         stride: 1
         bias_term: false
     }
-    param {
-        lr_mult: 1.0
-    }
+    param { lr_mult: 0 decay_mult: 0 }
 }
 
 layer {
@@ -3524,6 +3420,7 @@ layer {
     type: "ReLU"
 }
 
+
 #========= RPN ============
 
 layer {
@@ -3531,11 +3428,11 @@ layer {
   type: "Convolution"
   bottom: "res5c"
   top: "rpn/output"
+  param { lr_mult: 0.0 decay_mult: 0.0}
+  param { lr_mult: 0.0 decay_mult: 0.0}
   convolution_param {
     num_output: 512
     kernel_size: 3 pad: 1 stride: 1
-    weight_filler { type: "gaussian" std: 0.01 }
-    bias_filler { type: "constant" value: 0 }
   }
 }
 layer {
@@ -3550,65 +3447,124 @@ layer {
   type: "Convolution"
   bottom: "rpn/output"
   top: "rpn_cls_score"
+  param { lr_mult: 0.0 decay_mult: 0.0}
+  param { lr_mult: 0.0 decay_mult: 0.0}
   convolution_param {
     num_output: 18   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
-    weight_filler { type: "gaussian" std: 0.01 }
-    bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
   name: "rpn_bbox_pred"
   type: "Convolution"
   bottom: "rpn/output"
   top: "rpn_bbox_pred"
+  param { lr_mult: 0.0 decay_mult: 0.0}
+  param { lr_mult: 0.0 decay_mult: 0.0}
   convolution_param {
     num_output: 36   # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
-    weight_filler { type: "gaussian" std: 0.01 }
-    bias_filler { type: "constant" value: 0 }
-  }
-}
-layer {
-   bottom: "rpn_cls_score"
-   top: "rpn_cls_score_reshape"
-   name: "rpn_cls_score_reshape"
-   type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
-}
-
-#========= RoI Proposal ============
-
-layer {
-  name: "rpn_cls_prob"
-  type: "Softmax"
-  bottom: "rpn_cls_score_reshape"
-  top: "rpn_cls_prob"
-}
-layer {
-  name: 'rpn_cls_prob_reshape'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob'
-  top: 'rpn_cls_prob_reshape'
-  reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
-}
-layer {
-  name: 'proposal'
-  type: 'Python'
-  bottom: 'rpn_cls_prob_reshape'
-  bottom: 'rpn_bbox_pred'
-  bottom: 'im_info'
-  top: 'rois'
-  python_param {
-    module: 'rpn.proposal_layer'
-    layer: 'ProposalLayer'
-    param_str: "'feat_stride': 16"
   }
 }
 
+layer {
+  name: "silence_rpn"
+  type: "Silence"
+  bottom: "rpn_cls_score"
+  bottom: "rpn_bbox_pred"
+}
 
+#####################rpn cascade######################
+# Dummy layers so that initial parameters are saved into the output net
+layer {
+    name: "dummy_roi_pool5_res5c"
+    type: "DummyData"
+    top: "dummy_roi_pool5_res5c"
+    dummy_data_param {
+        shape { dim: 1 dim: 2048 dim: 7 dim: 7 }
+        data_filler { type: "gaussian" std: 0.01 }
+    }
+}
+
+layer {
+    bottom: "dummy_roi_pool5_res5c"
+    top: "rpn_cascade_conv"
+    name: "rpn_cascade_conv"
+    type: "Convolution"
+    #log_data: true
+    convolution_param {
+        num_output: 1024
+        kernel_size: 1
+        pad: 0
+        weight_filler {
+            type: "gaussian"
+            std: 0.01
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
+    }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
+}
+
+layer {
+    bottom: "rpn_cascade_conv"
+    top: "rpn_cascade_conv"
+    name: "rpn_cascade_conv_relu"
+    type: "ReLU"
+}
+
+layer {
+    bottom: "rpn_cascade_conv"
+    top: "rpn_cascade_cls"
+    name: "rpn_cascade_cls"
+    type: "Convolution"
+    #log_data: true
+    convolution_param {
+        num_output: 2 #(background and region)
+        kernel_size: 1
+        pad: 0
+        weight_filler {
+            type: "gaussian"
+            std: 0.01
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
+    }
+    param { lr_mult: 0 decay_mult: 0 }
+    param { lr_mult: 0 decay_mult: 0 }
+}
+layer {
+  name: "silence_rpn_cascade_cls_score"
+  type: "Silence"
+  bottom: "rpn_cascade_cls"
+}
 
 ########################################
+layer {
+  name: 'roi-data'
+  type: 'Python'
+  bottom: 'precomputed_rois'
+  bottom: 'gt_boxes'
+  bottom: 'gt_landmarks'
+  top: 'rois'
+  top: 'labels'
+  top: 'bbox_targets'
+  top: 'bbox_inside_weights'
+  top: 'bbox_outside_weights'
+  top: 'landmark_targets'
+  python_param {
+    module: 'rpn.proposal_target_layer'
+    layer: 'ProposalTargetLayer'
+    param_str: "'num_classes': 2"
+  }
+}
+
 #----------------------new conv layer------------------
 layer {
     bottom: "res5c"
@@ -3627,6 +3583,12 @@ layer {
             type: "constant"
             value: 0
         }
+    }
+    param {
+        lr_mult: 1.0
+    }
+    param {
+        lr_mult: 2.0
     }
 }
 
@@ -3655,6 +3617,12 @@ layer {
             value: 0
         }
     }
+    param {
+        lr_mult: 1.0
+    }
+    param {
+        lr_mult: 2.0
+    }
 }
 layer {
     bottom: "conv_new_1"
@@ -3673,6 +3641,37 @@ layer {
             type: "constant"
             value: 0
         }
+    }
+    param {
+        lr_mult: 1.0
+    }
+    param {
+        lr_mult: 2.0
+    }
+}
+layer {
+    bottom: "conv_new_1"
+    top: "rfcn_landmark"
+    name: "rfcn_landmark"
+    type: "Convolution"
+    convolution_param {
+        num_output: 294 #6*(7^2) lm_num*(score_maps_size^2)
+        kernel_size: 1
+        pad: 0
+        weight_filler {
+            type: "gaussian"
+            std: 0.01
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
+    }
+    param {
+        lr_mult: 1.0
+    }
+    param {
+        lr_mult: 2.0
     }
 }
 
@@ -3718,7 +3717,7 @@ layer {
 
 layer {
     bottom: "psroipooled_loc_rois"
-    top: "bbox_pred_pre"
+    top: "bbox_pred"
     name: "ave_bbox_pred_rois"
     type: "Pooling"
     pooling_param {
@@ -3728,39 +3727,84 @@ layer {
     }
 }
 
+layer {
+    bottom: "rfcn_landmark"
+    bottom: "rois"
+    top: "psroipooled_lm_rois"
+    name: "psroipooled_lm_rois"
+    type: "PSROIPooling"
+    psroi_pooling_param {
+        spatial_scale: 0.0625
+        output_dim: 6
+        group_size: 7
+    }
+}
+
+layer {
+    bottom: "psroipooled_lm_rois"
+    top: "landmark_pred"
+    name: "ave_landmark_pred_rois"
+    type: "Pooling"
+    pooling_param {
+        pool: AVE
+        kernel_size: 7
+        stride: 7
+    }
+}
 
 #-----------------------output------------------------
 layer {
-   name: "cls_probility"
-   type: "Softmax"
+   name: "rfcn_loss"
+   type: "SoftmaxWithLoss"
    bottom: "cls_score"
-   top: "cls_prob_pre"
+   bottom: "labels"
+   top: "rfcn_loss_cls"
+   loss_weight: 1
+   propagate_down: true
+   propagate_down: false
 }
 
 layer {
-    name: "cls_prob_reshape"
-    type: "Reshape"
-    bottom: "cls_prob_pre"
-    top: "cls_prob"
-    reshape_param {
-        shape {
-            dim: -1
-            dim: 2
-        }
-    }
+   name: "rfcn_accuarcy"
+   type: "Accuracy"
+   bottom: "cls_score"
+   bottom: "labels"
+   top: "rfcn_accuarcy"
+   #include: { phase: TEST }
+   propagate_down: false
+   propagate_down: false
 }
 
 layer {
-    name: "bbox_pred_reshape"
-    type: "Reshape"
-    bottom: "bbox_pred_pre"
-    top: "bbox_pred"
-    reshape_param {
-        shape {
-            dim: -1
-            dim: 8
-        }
-    }
+   name: "rfcn_loss_bbox"
+   type: "SmoothL1LossOHEM"
+   bottom: "bbox_pred"
+   bottom: "bbox_targets"
+   bottom: 'bbox_inside_weights'
+   top: "rfcn_loss_bbox"
+   loss_weight: 1
+   loss_param {
+        normalization: PRE_FIXED
+        pre_fixed_normalizer: 128
+   }
+   propagate_down: true
+   propagate_down: false
+   propagate_down: false
 }
 
+layer {
+   name: "rfcn_loss_landmark"
+   type: "SmoothL1Loss"
+   bottom: "landmark_pred"
+   bottom: "landmark_targets"
+   top: "rfcn_loss_landmark"
+   loss_weight: 1
+   propagate_down: true
+   propagate_down: false
+}
 
+layer {
+    name: "silence"
+    type: "Silence"
+    bottom: "bbox_outside_weights"
+}

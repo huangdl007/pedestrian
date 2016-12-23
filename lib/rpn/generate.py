@@ -97,6 +97,25 @@ def im_proposals(net, im):
     scores = net.blobs['rpn_cls_prob'].data.copy()
     return boxes, scores
 
+def im_proposals_cascade(net, im, thresh):
+    """Generate RPN proposals on a single image."""
+    blobs = {}
+    blobs['data'], blobs['im_info'] = _get_image_blob(im)
+    net.blobs['data'].reshape(*(blobs['data'].shape))
+    net.blobs['im_info'].reshape(*(blobs['im_info'].shape))
+    blobs_out = net.forward(
+            data=blobs['data'].astype(np.float32, copy=False),
+            im_info=blobs['im_info'].astype(np.float32, copy=False))
+
+    scale = blobs['im_info'][0, 2]
+    rpn_rois = net.blobs['rpn_rois'].data.copy()
+    rpn_boxes = rpn_rois[:, 1:] / scale
+    scores = net.blobs['rpn_cascade_cls_prob'].data.copy()
+    inds = np.where(scores[:, 1] >= thresh)[0]
+    boxes = rpn_boxes[inds, :]
+    #print len(rpn_boxes), len(boxes), len(inds)
+    return boxes, scores
+
 def imdb_proposals(net, imdb):
     """Generate RPN proposals on all images in an imdb."""
 
@@ -114,5 +133,20 @@ def imdb_proposals(net, imdb):
             # from IPython import embed; embed()
             _vis_proposals(im, dets[:3, :], thresh=0.9)
             plt.show()
+
+    return imdb_boxes
+
+def imdb_proposals_cascade(net, imdb, thresh):
+    """Generate RPN proposals on all images in an imdb."""
+
+    _t = Timer()
+    imdb_boxes = [[] for _ in xrange(imdb.num_images)]
+    for i in xrange(imdb.num_images):
+        im = cv2.imread(imdb.image_path_at(i))
+        _t.tic()
+        imdb_boxes[i], scores = im_proposals_cascade(net, im, thresh)
+        _t.toc()
+        print 'im_proposals: {:d}/{:d} {:.3f}s' \
+              .format(i + 1, imdb.num_images, _t.average_time)
 
     return imdb_boxes
