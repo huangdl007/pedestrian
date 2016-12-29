@@ -68,6 +68,37 @@ def bbox_transform_inv(boxes, deltas):
 
     return pred_boxes
 
+def landmark_transform_inv(boxes, deltas):
+    if boxes.shape[0] == 0:
+        return np.zeros((0, 6), dtype=deltas.dtype)
+    
+    widths = boxes[:, 2] - boxes[:, 0] + 1.0
+    heights = boxes[:, 3] - boxes[:, 1] + 1.0
+
+    #assert all landmarks inside the boxes
+    deltas = np.maximum(np.minimum(deltas, 1.0), 0.0)
+    #assert deltas.all() <= 1.0, 'all landmarks must be inside the boxes'
+    # inds = np.where(deltas<0.0)[0]
+    # if len(inds) > 0:
+    #     print deltas
+    #     exit(1)
+    dhx = deltas[:, 0::6]
+    dhy = deltas[:, 1::6]
+    dlx = deltas[:, 2::6]
+    dly = deltas[:, 3::6]
+    drx = deltas[:, 4::6]
+    dry = deltas[:, 5::6]
+
+    pred_landmarks = np.zeros((deltas.shape[0], 6), dtype=deltas.dtype)
+    pred_landmarks[:, 0::6] = dhx * widths[:, np.newaxis]
+    pred_landmarks[:, 1::6] = dhy * heights[:, np.newaxis]
+    pred_landmarks[:, 2::6] = dlx * widths[:, np.newaxis]
+    pred_landmarks[:, 3::6] = dly * heights[:, np.newaxis]
+    pred_landmarks[:, 4::6] = drx * widths[:, np.newaxis]
+    pred_landmarks[:, 5::6] = dry * heights[:, np.newaxis]
+
+    return pred_landmarks
+
 def clip_boxes(boxes, im_shape):
     """
     Clip boxes to image boundaries.
@@ -82,3 +113,25 @@ def clip_boxes(boxes, im_shape):
     # y2 < im_shape[0]
     boxes[:, 3::4] = np.maximum(np.minimum(boxes[:, 3::4], im_shape[0] - 1), 0)
     return boxes
+
+def clip_landmarks(landmarks, boxes):
+    """
+    Clip landmarks inside boxes boundaries.
+    """
+    widths = boxes[:, 2] - boxes[:, 0]
+    heights = boxes[:, 3] - boxes[:, 1]
+
+    # hx <= width
+    landmarks[:, 0::6] = np.minimum(landmarks[:, 0::6], widths[:, np.newaxis])
+    # hy <= height
+    landmarks[:, 1::6] = np.minimum(landmarks[:, 1::6], heights[:, np.newaxis])
+    # lx <= width
+    landmarks[:, 2::6] = np.minimum(landmarks[:, 2::6], widths[:, np.newaxis])
+    # ly <= height
+    landmarks[:, 3::6] = np.minimum(landmarks[:, 3::6], heights[:, np.newaxis])
+    # rx <= width
+    landmarks[:, 4::6] = np.minimum(landmarks[:, 4::6], widths[:, np.newaxis])
+    # ry <= height
+    landmarks[:, 5::6] = np.minimum(landmarks[:, 5::6], heights[:, np.newaxis])
+
+    return landmarks

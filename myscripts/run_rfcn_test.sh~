@@ -1,0 +1,1 @@
+./tools/test_net.py --gpu 0 --def models/mymodels/rfcn_rpn_cascade_50_alt/rfcn_test.prototxt --imdb voc_2007_test --cfg experiments/cfgs/rfcn_rpn_cascade_50.yml --net /home/wublack/R-FCN/py-R-FCN-pedestrian/output/rfcn_rpn_cascade_50_alt/voc_2007_trainval/stage2_resnet50_rfcn_cascade_iter_50000.caffemodel

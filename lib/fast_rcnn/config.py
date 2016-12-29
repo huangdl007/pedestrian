@@ -151,6 +151,7 @@ __C.TEST.SVM = False
 
 # Test using bounding-box regressors
 __C.TEST.BBOX_REG = True
+__C.TEST.LANDMARK_REG = False
 
 # Propose boxes
 __C.TEST.HAS_RPN = False

@@ -11,6 +11,6 @@ weight_decay: 0.0005
 # function
 snapshot: 0
 # We still use the snapshot prefix, though
-snapshot_prefix: "stage2_resnet50_rfcn_cascade"
+snapshot_prefix: "stage2_resnet50_rfcn"
 iter_size: 2
 # debug_info: true

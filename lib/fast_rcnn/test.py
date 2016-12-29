@@ -8,7 +8,7 @@
 """Test a Fast R-CNN network on an imdb (image database)."""
 
 from fast_rcnn.config import cfg, get_output_dir
-from fast_rcnn.bbox_transform import clip_boxes, bbox_transform_inv
+from fast_rcnn.bbox_transform import clip_boxes, bbox_transform_inv, landmark_transform_inv, clip_landmarks
 import argparse
 from utils.timer import Timer
 import numpy as np
@@ -182,6 +182,14 @@ def im_detect(net, im, boxes=None):
         scores = scores[inv_index, :]
         pred_boxes = pred_boxes[inv_index, :]
 
+    if cfg.TEST.LANDMARK_REG:
+        # Apply landmark position regression deltas
+        landmark_deltas = blobs_out['landmark_pred']
+        pred_landmarks = landmark_transform_inv(boxes, landmark_deltas)
+        pred_landmarks = clip_landmarks(pred_landmarks, pred_boxes)
+
+        return scores, pred_boxes, pred_landmarks
+
     return scores, pred_boxes
 
 def vis_detections(im, class_name, dets, thresh=0.3):
@@ -233,7 +241,8 @@ def test_net(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
     #    (x1, y1, x2, y2, score)
     all_boxes = [[[] for _ in xrange(num_images)]
                  for _ in xrange(imdb.num_classes)]
-
+    all_landmarks = [[[] for _ in xrange(num_images)]
+                 for _ in xrange(imdb.num_classes)]
     output_dir = get_output_dir(imdb, net)
 
     # timers
@@ -262,7 +271,10 @@ def test_net(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
 
         im = cv2.imread(imdb.image_path_at(i))
         _t['im_detect'].tic()
-        scores, boxes = im_detect(net, im, box_proposals)
+        if cfg.TEST.LANDMARK_REG:
+            scores, boxes, landmarks = im_detect(net, im, box_proposals)
+        else:
+            scores, boxes = im_detect(net, im, box_proposals)
         _t['im_detect'].toc()
 
         _t['misc'].tic()
@@ -270,6 +282,7 @@ def test_net(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
         for j in xrange(1, imdb.num_classes):
             inds = np.where(scores[:, j] > thresh)[0]
             cls_scores = scores[inds, j]
+
             if cfg.TEST.AGONISTIC:
                 cls_boxes = boxes[inds, 4:8]
             else:
@@ -281,6 +294,11 @@ def test_net(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
             if vis:
                 vis_detections(im, imdb.classes[j], cls_dets)
             all_boxes[j][i] = cls_dets
+
+            if cfg.TEST.LANDMARK_REG:
+                landmarks = landmarks[inds, :]  #threshold filtered
+                landmarks = landmarks[keep, :]  #nnm filtered
+                all_landmarks[j][i] = landmarks 
 
         # Limit to max_per_image detections *over all classes*
         if max_per_image > 0:
@@ -303,12 +321,24 @@ def test_net(net, imdb, max_per_image=100, thresh=0.5, vis=False, wrt=False):
             savename = os.path.join(image_output_dir, os.path.basename(imdb.image_path_at(i)))
             for j in xrange(1, imdb.num_classes):
                 result_dets = all_boxes[j][i]
-                for det in result_dets:
-                    bbox = det[:4]
-                    score = det[-1]
-                    if score > 0.3:
+                if cfg.TEST.LANDMARK_REG:
+                    landmark_dets = all_landmarks[j][i]
+                    assert len(result_dets) == len(landmark_dets), 'landmark num must match bbox num'
+
+                for k in range(len(result_dets)):
+                    bbox = result_dets[k][:4]
+                    score = result_dets[k][-1]
+                    if score > 0.5:
                         cv2.rectangle(result_im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0))
                         cv2.putText(result_im, '{}: {:.3f}'.format(imdb.classes[j], score), (bbox[0], bbox[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255))
+                        # paint the landmarks
+                        if cfg.TEST.LANDMARK_REG:
+                            lms = landmark_dets[k]
+                            assert bbox[0]+lms[0] < bbox[2], 'landmarks must indside the box: '+ str(bbox) + str(lms)
+                            cv2.circle(result_im, (bbox[0]+lms[0], bbox[1]+lms[1]), 3, (255, 0, 0), -1)
+                            cv2.circle(result_im, (bbox[0]+lms[2], bbox[1]+lms[3]), 3, (0, 255, 0), -1)
+                            cv2.circle(result_im, (bbox[0]+lms[4], bbox[1]+lms[5]), 3, (0, 0, 255), -1)
+
             cv2.imwrite(savename, result_im)
 
     det_file = os.path.join(output_dir, 'detections.pkl')

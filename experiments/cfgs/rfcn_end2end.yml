@@ -15,3 +15,4 @@ TRAIN:
 TEST:
   HAS_RPN: True
   AGONISTIC: True
+  LANDMARK_REG: True

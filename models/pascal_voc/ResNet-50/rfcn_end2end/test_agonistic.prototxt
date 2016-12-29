@@ -3696,7 +3696,31 @@ layer {
         lr_mult: 2.0
     }
 }
-
+layer {
+    bottom: "conv_new_1"
+    top: "rfcn_landmark"
+    name: "rfcn_landmark"
+    type: "Convolution"
+    convolution_param {
+        num_output: 294 #6*(7^2) lm_num*(score_maps_size^2)
+        kernel_size: 1
+        pad: 0
+        weight_filler {
+            type: "gaussian"
+            std: 0.01
+        }
+        bias_filler {
+            type: "constant"
+            value: 0
+        }
+    }
+    param {
+        lr_mult: 1.0
+    }
+    param {
+        lr_mult: 2.0
+    }
+}
 #--------------position sensitive RoI pooling--------------
 layer {
     bottom: "rfcn_cls"
@@ -3749,6 +3773,30 @@ layer {
     }
 }
 
+layer {
+    bottom: "rfcn_landmark"
+    bottom: "rois"
+    top: "psroipooled_lm_rois"
+    name: "psroipooled_lm_rois"
+    type: "PSROIPooling"
+    psroi_pooling_param {
+        spatial_scale: 0.0625
+        output_dim: 6
+        group_size: 7
+    }
+}
+
+layer {
+    bottom: "psroipooled_lm_rois"
+    top: "landmark_pred_pre"
+    name: "ave_landmark_pred_rois"
+    type: "Pooling"
+    pooling_param {
+        pool: AVE
+        kernel_size: 7
+        stride: 7
+    }
+}
 
 #-----------------------output------------------------
 layer {
@@ -3784,4 +3832,15 @@ layer {
     }
 }
 
-
+layer {
+    name: "landmark_pred_reshape"
+    type: "Reshape"
+    bottom: "landmark_pred_pre"
+    top: "landmark_pred"
+    reshape_param {
+        shape {
+            dim: -1
+            dim: 6
+        }
+    }
+}
