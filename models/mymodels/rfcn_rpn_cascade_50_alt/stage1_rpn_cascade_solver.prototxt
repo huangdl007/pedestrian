@@ -1,4 +1,4 @@
-train_net: "models/mymodels/rfcn_rpn_cascade_50_alt/stage1_rpn_cascade_train.prototxt"
+train_net: "models/mymodels/rfcn_rpn_cascade_50_alt/stage1_rpn_cascade_train_frcn.prototxt"
 base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1

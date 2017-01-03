@@ -33,7 +33,7 @@ def parse_args():
                         default=0.5, type=float)
     parser.add_argument('--video', dest='videofile',
                         help='test video file',
-                        default='data/testvideo/01.MP4', type=str)
+                        default='data/testvideo/00.mp4', type=str)
 
     args = parser.parse_args()
     return args
@@ -107,7 +107,7 @@ if __name__ == '__main__':
             print 'frame:', num
             num += 1
             if ret == True:
-                frame = cv2.resize(frame, (640, 360))
+                #frame = cv2.resize(frame, (640, 360))
                 frame = detector.detect(frame)
                 cv2.imshow('video', frame)
 
