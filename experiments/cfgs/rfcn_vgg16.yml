@@ -1,4 +1,4 @@
-EXP_DIR: rfcn_vgg16_end2end
+EXP_DIR: rfcn_end2end
 TRAIN:
   HAS_RPN: True
   IMS_PER_BATCH: 1
@@ -15,3 +15,4 @@ TRAIN:
 TEST:
   HAS_RPN: True
   AGONISTIC: True
+  LANDMARK_REG: True
