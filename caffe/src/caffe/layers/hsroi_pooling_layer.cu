@@ -51,7 +51,7 @@ namespace caffe {
       Dtype roi_height = max(roi_end_h - roi_start_h, 0.1);
 
       // Compute relative region(entire, head, left soulder, right shoulder) occording to ow
-      int hstart, wstart, hend, wend;
+      int hstart=0, wstart=0, hend=0, wend=0;
       if(ow == 0) {	// entire region
       	hstart = roi_start_h;
       	wstart = roi_start_w;

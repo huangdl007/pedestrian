@@ -1,0 +1,1 @@
+./tools/test_net.py --gpu 0 --def models/mymodels/VGG16/test.prototxt --imdb voc_2007_test --cfg experiments/cfgs/rfcn_vgg16.yml --net output/vgg16_rfcn_end2end/voc_2007_trainval/vgg16_rfcn_iter_50000.caffemodel
