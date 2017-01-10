@@ -22,12 +22,12 @@ def parse_args():
                         default=0, type=int)
     parser.add_argument('--def', dest='prototxt',
                         help='prototxt file defining the network',
-                        default='models/pascal_voc/ResNet-50/rfcn_end2end/test_agonistic.prototxt', type=str)
+                        default='models/mymodels/ZF/test.prototxt', type=str)
     parser.add_argument('--net', dest='caffemodel',
                         help='model to test',
-                        default='output/rfcn_end2end/voc_2007_trainval/resnet50_rfcn_iter_50000.caffemodel', type=str)
+                        default='output/zf_rfcn_end2end/voc_2007_trainval/zf_rfcn_iter_50000.caffemodel', type=str)
     parser.add_argument('--cfg', dest='cfg_file',
-                        help='optional config file', default='experiments/cfgs/rfcn_end2end.yml', type=str)
+                        help='optional config file', default='experiments/cfgs/rfcn_zf.yml', type=str)
     parser.add_argument('--thresh', dest='thresh',
                         help='Threshold for IOU',
                         default=0.5, type=float)
@@ -52,18 +52,19 @@ class PedestrianDetector:
         
         self._t['im_detect'].tic()
 
-        scores, boxes, landmarks = im_detect(self._net, im)
+        #scores, boxes, landmarks = im_detect(self._net, im)
+        scores, boxes = im_detect(self._net, im)
         self._t['im_detect'].toc()
         inds = np.where(scores[:, 1] > thresh)[0]
         cls_scores = scores[inds, 1]
         cls_boxes = boxes[inds, 4:8]
-        cls_landmarks = landmarks[inds, :]
+        #cls_landmarks = landmarks[inds, :]
         # Apply NMS
         cls_dets = np.hstack((cls_boxes, cls_scores[:, np.newaxis])) \
                 .astype(np.float32, copy=False)
         keep = nms(cls_dets, cfg.TEST.NMS)
         det_boxes = cls_dets[keep, :]
-        det_landmarks = cls_landmarks[keep, :]
+        #det_landmarks = cls_landmarks[keep, :]
 
         for k in range(det_boxes.shape[0]):
             bbox = det_boxes[k][:4]
@@ -72,11 +73,11 @@ class PedestrianDetector:
                 cv2.rectangle(im, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0))
                 cv2.putText(im, '{}: {:.3f}'.format('pedestrian', score), (bbox[0], bbox[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 255, 255))
                 # paint the landmarks
-                lms = det_landmarks[k]
-                assert bbox[0]+lms[0] < bbox[2], 'landmarks must indside the box: '+ str(bbox) + str(lms)
-                cv2.circle(im, (bbox[0]+lms[0], bbox[1]+lms[1]), 3, (255, 0, 0), -1)
-                cv2.circle(im, (bbox[0]+lms[2], bbox[1]+lms[3]), 3, (0, 255, 0), -1)
-                cv2.circle(im, (bbox[0]+lms[4], bbox[1]+lms[5]), 3, (0, 0, 255), -1)
+                # lms = det_landmarks[k]
+                # assert bbox[0]+lms[0] < bbox[2], 'landmarks must indside the box: '+ str(bbox) + str(lms)
+                # cv2.circle(im, (bbox[0]+lms[0], bbox[1]+lms[1]), 3, (255, 0, 0), -1)
+                # cv2.circle(im, (bbox[0]+lms[2], bbox[1]+lms[3]), 3, (0, 255, 0), -1)
+                # cv2.circle(im, (bbox[0]+lms[4], bbox[1]+lms[5]), 3, (0, 0, 255), -1)
 
         
         print 'im_detect time: {:.3f}s'.format(self._t['im_detect'].average_time)
@@ -107,7 +108,7 @@ if __name__ == '__main__':
             print 'frame:', num
             num += 1
             if ret == True:
-                #frame = cv2.resize(frame, (640, 360))
+                frame = cv2.resize(frame, (640, 360))
                 frame = detector.detect(frame)
                 cv2.imshow('video', frame)
 

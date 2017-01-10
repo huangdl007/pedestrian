@@ -1094,13 +1094,11 @@ message PSROIPoolingParameter {
 
 // Message that stores parameters used by HSROIPoolingLayer
 message HSROIPoolingParameter {
-  // Pad, kernel size, and stride are all given as a single value for equal
-  // dimensions in height and width or as Y, X pairs.
-  // required uint32 output_width = 3; // The pooled output feature num
   // Multiplicative spatial scale factor to translate ROI coords from their
   // input scale to the scale used when pooling
   optional float spatial_scale = 1 [default = 1];
   required int32 output_dim = 2; // output channel number
+  required uint32 output_height = 3; // The feature map num for each landmark
 }
 
 message ScaleParameter {

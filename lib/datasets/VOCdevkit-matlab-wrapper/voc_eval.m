@@ -1,8 +1,9 @@
-function res = voc_eval(path, comp_id, test_set, output_dir)
+function res = voc_eval(path, comp_id, test_set, output_dir, iou)
 
 VOCopts = get_voc_opts(path);
 VOCopts.testset = test_set;
-
+VOCopts.minoverlap = iou;
+fprintf('%f\n', VOCopts.minoverlap);
 for i = 1:length(VOCopts.classes)
   cls = VOCopts.classes{i};
   res(i) = voc_eval_cls(cls, VOCopts, comp_id, output_dir);
@@ -43,7 +44,8 @@ if do_eval
   print(gcf, '-djpeg', '-r0', ...
         [output_dir '/' cls '_pr.jpg']);
 end
-fprintf('!!! %s : %.4f %.4f\n', cls, ap, ap_auc);
+
+fprintf('%s : recal=%.4f, prec=%.4f, ap=%.4f, ap_auc=%.4f\n', cls, recall(end), prec(end), ap, ap_auc);
 
 res.recall = recall;
 res.prec = prec;

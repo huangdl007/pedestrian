@@ -364,7 +364,7 @@ layer {
     name: "rfcn_cls"
     type: "Convolution"
     convolution_param {
-        num_output: 8 #2*(4) cls_num*(score_maps_size)
+        num_output: 8 #2*(1*4) cls_num*(score_maps_size)
         kernel_size: 1
         pad: 0
         weight_filler {
@@ -389,7 +389,7 @@ layer {
     name: "rfcn_bbox"
     type: "Convolution"
     convolution_param {
-        num_output: 32 #8*(4) cls_num*(score_maps_size)
+        num_output: 32 #8*(1*4) cls_num*(score_maps_size)
         kernel_size: 1
         pad: 0
         weight_filler {
@@ -419,6 +419,7 @@ layer {
     hsroi_pooling_param {
         spatial_scale: 0.0625
         output_dim: 2
+        output_height: 1
     }
 }
 
@@ -446,6 +447,7 @@ layer {
     hsroi_pooling_param {
         spatial_scale: 0.0625
         output_dim: 8
+        output_height: 1
     }
 }
 

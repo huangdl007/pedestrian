@@ -367,7 +367,7 @@ class pascal_voc(imdb):
                                        dets[k, 0] + 1, dets[k, 1] + 1,
                                        dets[k, 2] + 1, dets[k, 3] + 1))
 
-    def _do_python_eval(self, output_dir = 'output'):
+    def _do_python_eval(self, output_dir = 'output', iou=0.5):
         annopath = os.path.join(
             self._devkit_path,
             'VOC' + self._year,
@@ -392,7 +392,7 @@ class pascal_voc(imdb):
                 continue
             filename = self._get_voc_results_file_template().format(cls)
             rec, prec, ap = voc_eval(
-                filename, annopath, imagesetfile, cls, cachedir, ovthresh=0.6,
+                filename, annopath, imagesetfile, cls, cachedir, ovthresh=iou,
                 use_07_metric=use_07_metric)
             aps += [ap]
             #print len(rec), rec, len(prec), prec, ap
@@ -416,7 +416,7 @@ class pascal_voc(imdb):
         print('-- Thanks, The Management')
         print('--------------------------------------------------------------')
 
-    def _do_matlab_eval(self, output_dir='output'):
+    def _do_matlab_eval(self, output_dir='output', iou=0.5):
         print '-----------------------------------------------------'
         print 'Computing results with the official MATLAB eval code.'
         print '-----------------------------------------------------'
@@ -425,17 +425,17 @@ class pascal_voc(imdb):
         cmd = 'cd {} && '.format(path)
         cmd += '{:s} -nodisplay -nodesktop '.format(cfg.MATLAB)
         cmd += '-r "dbstop if error; '
-        cmd += 'voc_eval(\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\'); quit;"' \
+        cmd += 'voc_eval(\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:f}\'); quit;"' \
                .format(self._devkit_path, self._get_comp_id(),
-                       self._image_set, output_dir)
+                       self._image_set, output_dir, iou)
         print('Running:\n{}'.format(cmd))
         status = subprocess.call(cmd, shell=True)
 
-    def evaluate_detections(self, all_boxes, output_dir):
+    def evaluate_detections(self, all_boxes, output_dir, iou):
         self._write_voc_results_file(all_boxes)
-        self._do_python_eval(output_dir)
+        self._do_python_eval(output_dir, iou)
         if self.config['matlab_eval']:
-            self._do_matlab_eval(output_dir)
+            self._do_matlab_eval(output_dir, iou)
         if self.config['cleanup']:
             for cls in self._classes:
                 if cls == '__background__':

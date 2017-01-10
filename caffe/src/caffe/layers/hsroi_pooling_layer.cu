@@ -81,9 +81,9 @@ namespace caffe {
       wend = min(max(wend, 0), width);
       bool is_empty = (hend <= hstart) || (wend <= wstart);
 
-      int c = (ctop*output_height + oh)*output_width + ow;
+      int cbottom = (ctop*output_width + ow)*output_height + oh;
 
-      bottom_data += (roi_batch_ind * channels + c) * height * width;
+      bottom_data += (roi_batch_ind * channels + cbottom) * height * width;
       Dtype out_sum = 0;
       for (int h = hstart; h < hend; ++h) {
         for (int w = wstart; w < wend; ++w) {
@@ -94,7 +94,7 @@ namespace caffe {
 
       Dtype bin_area = (hend - hstart)*(wend - wstart);
       top_data[index] = is_empty? 0. : out_sum/bin_area;
-      mapping_channel[index] = c;
+      mapping_channel[index] = cbottom;
     }
   }
 
